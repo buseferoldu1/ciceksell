@@ -27,3 +27,15 @@ Yayınlamadan önce her dosyanın Commons sayfasındaki lisans ve atıf koşulla
 | ortanca-4.jpg | File:Hydrangea macrophylla, Lévis.jpg |
 | ortanca-5.jpg | File:Hydrangea paniculata 07-02-2026. (actm.).jpg |
 | ortanca-6.jpg | File:Bigleaf Hydrangea Hydrangea macrophylla 'Tokyo Delight' Flowers 3008px.jpg |
+
+## Pinterest kaynakli (LISANS DOGRULANMADI)
+
+Asagidaki gorseller kullanicinin verdigi pin.it linklerinden indirildi.
+Bunlar ucuncu tarafa ait sanatsal fotograflar/gorseller olabilir; ticari
+kullanimdan once telif/lisans durumunu mutlaka dogrulayin veya kendi
+fotograflarinizla degistirin.
+
+| Yerel dosya | Kaynak |
+|---|---|
+| beyaz-zarafet.jpg | https://pin.it/295ajU541 (i.pinimg.com/.../01dd4f...) |
+| sukunet.jpg | https://pin.it/2rwGNiQpX (i.pinimg.com/.../3ce120...) |

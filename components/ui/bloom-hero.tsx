@@ -11,6 +11,8 @@ interface Slide {
   headlineTop: string;
   headlineBottom: string;
   product: Product;
+  // Vitrin gorseli urun fotografindan farkli olabilir (editoryel/sanatsal)
+  heroImage?: string;
 }
 
 const SLIDES: Slide[] = [
@@ -19,6 +21,7 @@ const SLIDES: Slide[] = [
     headlineTop: "Beyazın",
     headlineBottom: "Zarafeti",
     product: CATALOG.guller[1], // Beyaz Masal
+    heroImage: "/flowers/beyaz-zarafet.jpg",
   },
   {
     script: "Romantizm",
@@ -31,6 +34,7 @@ const SLIDES: Slide[] = [
     headlineTop: "Sükûnet",
     headlineBottom: "Bahçesi",
     product: CATALOG.ortancalar[1], // Lila Bahçe
+    heroImage: "/flowers/sukunet.jpg",
   },
 ];
 
@@ -104,7 +108,7 @@ export default function BloomHero() {
                 className="absolute inset-3"
               >
                 <motion.img
-                  src={slide.product.image}
+                  src={slide.heroImage ?? slide.product.image}
                   alt={slide.product.name}
                   animate={{ scale: [1, 1.04, 1] }}
                   transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -132,7 +136,7 @@ export default function BloomHero() {
                 }`}
               >
                 <img
-                  src={s.product.image}
+                  src={s.heroImage ?? s.product.image}
                   alt={s.product.name}
                   className="h-12 w-12 rounded-lg object-cover"
                 />
