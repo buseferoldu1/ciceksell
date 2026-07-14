@@ -1,7 +1,11 @@
+import Navbar from "@/components/ui/navbar";
+import FractalBloomHero from "@/components/ui/fractal-bloom-hero";
+
 export default function Home() {
   return (
     <main>
-      <p className="p-8 text-center">Çiçek Bankası — kuruluyor...</p>
+      <Navbar />
+      <FractalBloomHero />
     </main>
   );
 }
