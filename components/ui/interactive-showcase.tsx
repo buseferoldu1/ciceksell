@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import FlowerCatalog, { type CategoryKey } from "./flower-catalog";
 
 interface Flower {
   id: number;
+  key: CategoryKey;
   category: string;
   name: string;
   description: string;
@@ -22,42 +30,45 @@ interface Flower {
 const FLOWERS: Flower[] = [
   {
     id: 1,
+    key: "guller",
     category: "Atölye Serisi",
-    name: "Gece Gülü",
+    name: "Gül",
     description:
-      "Kadife dokulu yaprakları ve derin bordo tonlarıyla, tutkunun en zarif hâli.",
+      "Kadife dokulu yaprakları ve zamansız zarafetiyle, tutkunun en klasik ifadesi.",
     origin: "Anadolu",
     family: "Rosaceae",
     story:
-      "Her Gece Gülü, gün batımından sonra toplanır ve en yoğun rengini koruması için soğuk zincirde saklanır.",
-    image: "https://picsum.photos/seed/gece-gulu/900/1200",
-    thumbnail: "https://picsum.photos/seed/gece-gulu-thumb/200/200",
+      "Güllerimiz gün doğumundan önce toplanır ve en yoğun kokusunu koruması için soğuk zincirde atölyemize taşınır.",
+    image: "https://picsum.photos/seed/gul-vitrin/900/1200",
+    thumbnail: "https://picsum.photos/seed/gul-vitrin-thumb/200/200",
   },
   {
     id: 2,
+    key: "orkideler",
     category: "Atölye Serisi",
-    name: "Kristal Orkide",
+    name: "Orkide",
     description:
-      "Saf beyazın mora karışan gölgeleriyle, sadeliğin en gösterişli yorumu.",
+      "Zarif kavisleri ve haftalarca süren ömrüyle, sadeliğin en gösterişli yorumu.",
     origin: "Güneydoğu Asya",
     family: "Orchidaceae",
     story:
-      "Kristal Orkide, el işçiliğiyle hazırlanan özel serada haftalar süren bir olgunlaşma sürecinden geçer.",
-    image: "https://picsum.photos/seed/kristal-orkide/900/1200",
-    thumbnail: "https://picsum.photos/seed/kristal-orkide-thumb/200/200",
+      "Orkidelerimiz el işçiliğiyle hazırlanan özel serada haftalar süren bir olgunlaşma sürecinden geçer.",
+    image: "https://picsum.photos/seed/orkide-vitrin/900/1200",
+    thumbnail: "https://picsum.photos/seed/orkide-vitrin-thumb/200/200",
   },
   {
     id: 3,
+    key: "ortancalar",
     category: "Atölye Serisi",
-    name: "Sürreal Zambak",
+    name: "Ortanca",
     description:
-      "Gül kurusu tonların zambak siluetiyle buluştuğu, rüya gibi bir kompozisyon.",
-    origin: "Akdeniz",
-    family: "Liliaceae",
+      "Bulut gibi kabaran taç yapraklarıyla, bereketin ve içten duyguların çiçeği.",
+    origin: "Doğu Asya",
+    family: "Hydrangeaceae",
     story:
-      "Sürreal Zambak, atölyemizin imza rengini yakalamak için özel olarak yetiştirilen bir melez türdür.",
-    image: "https://picsum.photos/seed/surreal-zambak/900/1200",
-    thumbnail: "https://picsum.photos/seed/surreal-zambak-thumb/200/200",
+      "Ortancalarımız toprağın asidine göre renk değiştirir; her demet doğanın o güne özel imzasını taşır.",
+    image: "https://picsum.photos/seed/ortanca-vitrin/900/1200",
+    thumbnail: "https://picsum.photos/seed/ortanca-vitrin-thumb/200/200",
   },
 ];
 
@@ -72,11 +83,32 @@ const textVariants = {
 
 export default function InteractiveShowcase() {
   const [index, setIndex] = useState(0);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const flower = FLOWERS[index];
 
   const goTo = (i: number) => setIndex((i + FLOWERS.length) % FLOWERS.length);
   const goNext = () => goTo(index + 1);
   const goPrev = () => goTo(index - 1);
+
+  // Imlec takibi: merkez gorsel farenin konumuna gore hafifce egilir ve kayar
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const springConfig = { stiffness: 120, damping: 18 };
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [8, -8]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-8, 8]), springConfig);
+  const translateX = useSpring(useTransform(mouseX, [0, 1], [-14, 14]), springConfig);
+  const translateY = useSpring(useTransform(mouseY, [0, 1], [-10, 10]), springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set((e.clientX - rect.left) / rect.width);
+    mouseY.set((e.clientY - rect.top) / rect.height);
+  };
+
+  const resetMouse = () => {
+    mouseX.set(0.5);
+    mouseY.set(0.5);
+  };
 
   return (
     <section className="relative h-screen w-full overflow-hidden bg-[#131314] text-[#e5e2e3]">
@@ -135,27 +167,57 @@ export default function InteractiveShowcase() {
         </div>
 
         {/* Merkez Sutun: Odak Gorsel */}
-        <div className="relative flex items-center justify-center">
+        <div
+          className="relative flex items-center justify-center"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={resetMouse}
+        >
           <div className="pointer-events-none absolute h-[70%] w-[70%] rounded-full bg-[#f6b6be]/10 blur-3xl" />
 
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={`image-${flower.id}`}
-              src={flower.image}
-              alt={flower.name}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="relative z-10 h-[80%] max-h-[640px] w-auto object-cover"
-              style={{
-                maskImage:
-                  "radial-gradient(ellipse at center, black 55%, transparent 88%)",
-                WebkitMaskImage:
-                  "radial-gradient(ellipse at center, black 55%, transparent 88%)",
-              }}
-            />
-          </AnimatePresence>
+          <motion.div
+            style={{
+              rotateX,
+              rotateY,
+              x: translateX,
+              y: translateY,
+              transformPerspective: 900,
+            }}
+            className="relative z-10 flex h-[76%] max-h-[600px] items-center justify-center"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`image-${flower.id}`}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full"
+              >
+                {/* Nefes alma efekti */}
+                <motion.div
+                  animate={{ scale: [1, 1.045, 1] }}
+                  transition={{
+                    duration: 4.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="h-full"
+                >
+                  <img
+                    src={flower.image}
+                    alt={flower.name}
+                    className="h-full w-auto object-cover"
+                    style={{
+                      maskImage:
+                        "radial-gradient(ellipse at center, black 55%, transparent 88%)",
+                      WebkitMaskImage:
+                        "radial-gradient(ellipse at center, black 55%, transparent 88%)",
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
 
           <button
             type="button"
@@ -234,20 +296,44 @@ export default function InteractiveShowcase() {
         </div>
       </div>
 
-      {/* Alt orta: gecis noktalari */}
-      <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-3">
-        {FLOWERS.map((f, i) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => goTo(i)}
-            aria-label={`${f.name} göster`}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === index ? "w-8 bg-[#f6b6be]" : "w-1.5 bg-[#e5e2e3]/25"
-            }`}
-          />
-        ))}
+      {/* Alt orta: katalog butonu + gecis noktalari */}
+      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-4">
+        <motion.button
+          type="button"
+          onClick={() => setCatalogOpen(true)}
+          whileHover={{ scale: 1.06, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 300, damping: 18 }}
+          className="flex items-center gap-2 rounded-full bg-[#f6b6be] px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#131314] shadow-lg shadow-[#f6b6be]/20 transition-colors hover:bg-[#f9cdd3]"
+        >
+          <Sparkles className="h-4 w-4" />
+          Kataloğu Keşfet
+        </motion.button>
+
+        <div className="flex gap-3">
+          {FLOWERS.map((f, i) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`${f.name} göster`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === index ? "w-8 bg-[#f6b6be]" : "w-1.5 bg-[#e5e2e3]/25"
+              }`}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* Katalog overlay */}
+      <AnimatePresence>
+        {catalogOpen && (
+          <FlowerCatalog
+            initialCategory={flower.key}
+            onClose={() => setCatalogOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }
