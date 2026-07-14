@@ -36,7 +36,7 @@ export default function Features() {
           className="mx-auto mb-16 max-w-2xl text-center"
         >
           <h2 className="mb-4 font-serif text-3xl font-bold text-[#33323a] md:text-4xl">
-            Neden BLOOM?
+            Neden Çiçeksel?
           </h2>
           <p className="text-lg text-slate-600">
             Her aranjman, sevdiklerinize doğanın zarafetini taşıması için özenle

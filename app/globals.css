@@ -12,3 +12,26 @@ body {
   background: var(--color-brand-surface);
   color: #1f2937;
 }
+
+/* Dusen cicek yapraklari (FallingPetals) */
+@keyframes petal-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(var(--drift, 40px), 110vh, 0) rotate(420deg);
+  }
+}
+.petal-fall {
+  animation-name: petal-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .petal-fall {
+    animation: none;
+    display: none;
+  }
+}

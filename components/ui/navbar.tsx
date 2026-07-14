@@ -40,7 +40,7 @@ export default function Navbar() {
             <Flower2 className="h-5 w-5 text-[#d9594c]" />
           </span>
           <span className="font-serif text-2xl font-bold tracking-wide text-[#33323a]">
-            BLOOM
+            Çiçeksel
           </span>
         </Link>
 

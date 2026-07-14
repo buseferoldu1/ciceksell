@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ShoppingBag } from "lucide-react";
 import { CATALOG, formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/components/cart/cart-context";
+import FallingPetals from "./falling-petals";
 
 interface Slide {
   script: string;
@@ -50,6 +51,9 @@ export default function BloomHero() {
       {/* Dekoratif yumusak lekeler */}
       <div className="pointer-events-none absolute -right-20 top-10 h-[36rem] w-[36rem] rounded-full bg-[#d9594c]/5 blur-3xl" />
       <div className="pointer-events-none absolute -left-20 bottom-0 h-96 w-96 rounded-full bg-[#d9594c]/5 blur-3xl" />
+
+      {/* Dusen cicek yapraklari */}
+      <FallingPetals count={12} color="#d9594c" />
 
       <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-40 pt-28 lg:grid-cols-2 lg:px-10 lg:pb-24">
         {/* Sol: metin */}

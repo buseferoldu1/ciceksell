@@ -55,7 +55,7 @@ export default function FlowerCatalog({
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f6b6be]">
-            BLOOM
+            Çiçeksel
           </span>
           <h2 className="mt-1 font-serif text-3xl font-bold lg:text-4xl">
             Katalog

@@ -22,7 +22,7 @@ export default function Footer() {
             <div className="mb-3 flex items-center gap-2">
               <Flower2 className="h-6 w-6 text-white" />
               <span className="font-serif text-xl font-bold text-white">
-                BLOOM
+                Çiçeksel
               </span>
             </div>
             <p className="text-sm text-white/65">
@@ -55,7 +55,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>merhaba@bloom.com.tr</span>
+                <span>merhaba@ciceksel.com</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
@@ -82,7 +82,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 border-t border-white/10 pt-8 text-center text-sm text-white/45">
-          © {new Date().getFullYear()} BLOOM. Tüm hakları saklıdır.
+          © {new Date().getFullYear()} Çiçeksel. Tüm hakları saklıdır.
         </div>
       </div>
     </footer>
