@@ -64,7 +64,7 @@ export default function Pricing() {
           transition={{ duration: 0.6 }}
           className="mx-auto mb-16 max-w-2xl text-center"
         >
-          <h2 className="mb-4 font-serif text-3xl font-bold text-emerald-900 md:text-4xl">
+          <h2 className="mb-4 font-serif text-3xl font-bold text-[#33323a] md:text-4xl">
             Fiyatlandırma
           </h2>
           <p className="text-lg text-slate-600">
@@ -82,26 +82,26 @@ export default function Pricing() {
               transition={{ duration: 0.6, delay: index * 0.15 }}
               className={`relative flex flex-col rounded-2xl p-8 ${
                 plan.highlighted
-                  ? "bg-emerald-900 text-white shadow-xl md:-translate-y-4"
-                  : "border border-emerald-900/10 bg-white text-slate-700"
+                  ? "bg-[#d9594c] text-white shadow-xl md:-translate-y-4"
+                  : "border border-[#d9594c]/12 bg-white text-slate-700"
               }`}
             >
               {plan.highlighted && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-1 text-xs font-semibold text-emerald-900 shadow-sm">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-1 text-xs font-semibold text-[#33323a] shadow-sm">
                   En Popüler
                 </span>
               )}
 
               <h3
                 className={`font-serif text-2xl font-bold ${
-                  plan.highlighted ? "text-white" : "text-emerald-900"
+                  plan.highlighted ? "text-white" : "text-[#33323a]"
                 }`}
               >
                 {plan.name}
               </h3>
               <p
                 className={`mt-2 text-sm ${
-                  plan.highlighted ? "text-emerald-100" : "text-slate-500"
+                  plan.highlighted ? "text-white/70" : "text-slate-500"
                 }`}
               >
                 {plan.description}
@@ -113,7 +113,7 @@ export default function Pricing() {
                 </span>
                 <span
                   className={`ml-2 text-sm ${
-                    plan.highlighted ? "text-emerald-100" : "text-slate-500"
+                    plan.highlighted ? "text-white/70" : "text-slate-500"
                   }`}
                 >
                   / {plan.period}
@@ -125,10 +125,10 @@ export default function Pricing() {
                   <li key={feature} className="flex items-start gap-2 text-sm">
                     <Check
                       className={`mt-0.5 h-4 w-4 shrink-0 ${
-                        plan.highlighted ? "text-white" : "text-emerald-700"
+                        plan.highlighted ? "text-white" : "text-[#d9594c]"
                       }`}
                     />
-                    <span className={plan.highlighted ? "text-emerald-50" : ""}>
+                    <span className={plan.highlighted ? "text-[#f9e9e6]" : ""}>
                       {feature}
                     </span>
                   </li>
@@ -138,8 +138,8 @@ export default function Pricing() {
               <button
                 className={`w-full rounded-lg px-6 py-3 text-sm font-semibold transition-colors duration-300 ${
                   plan.highlighted
-                    ? "bg-white text-emerald-900 hover:bg-emerald-50"
-                    : "bg-emerald-900 text-white hover:bg-emerald-800"
+                    ? "bg-white text-[#33323a] hover:bg-[#f4e6e3]"
+                    : "bg-[#d9594c] text-white hover:bg-[#c2493d]"
                 }`}
               >
                 {plan.cta}

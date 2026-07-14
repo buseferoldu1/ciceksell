@@ -15,7 +15,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Çiçek Bankası | Premium Çiçek Tasarımları",
+  title: "BLOOM | Premium Çiçek Tasarımları",
   description:
     "Sevdiklerinize doğanın zarafetini hediye edin. Aynı gün teslimat seçeneğiyle, en taze aranjmanlar kapınızda.",
 };

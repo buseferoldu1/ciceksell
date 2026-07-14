@@ -15,17 +15,17 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-emerald-900 px-4 py-16 text-emerald-100 sm:px-6 lg:px-8">
+    <footer className="bg-[#33323a] px-4 py-16 text-white/70 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4">
           <div>
             <div className="mb-3 flex items-center gap-2">
               <Flower2 className="h-6 w-6 text-white" />
               <span className="font-serif text-xl font-bold text-white">
-                Çiçek Bankası
+                BLOOM
               </span>
             </div>
-            <p className="text-sm text-emerald-200">
+            <p className="text-sm text-white/65">
               Sevdiklerinize doğanın zarafetini hediye edin.
             </p>
           </div>
@@ -37,7 +37,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    className="text-sm text-emerald-200 transition-colors hover:text-white"
+                    className="text-sm text-white/65 transition-colors hover:text-white"
                   >
                     {link.label}
                   </a>
@@ -48,14 +48,14 @@ export default function Footer() {
 
           <div>
             <h3 className="mb-4 font-semibold text-white">İletişim</h3>
-            <ul className="space-y-3 text-sm text-emerald-200">
+            <ul className="space-y-3 text-sm text-white/65">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0" />
                 <span>0850 123 45 67</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0" />
-                <span>merhaba@cicekbankasi.com</span>
+                <span>merhaba@bloom.com.tr</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
@@ -81,8 +81,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-8 text-center text-sm text-emerald-300">
-          © {new Date().getFullYear()} Çiçek Bankası. Tüm hakları saklıdır.
+        <div className="mt-12 border-t border-white/10 pt-8 text-center text-sm text-white/45">
+          © {new Date().getFullYear()} BLOOM. Tüm hakları saklıdır.
         </div>
       </div>
     </footer>

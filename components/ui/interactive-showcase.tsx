@@ -114,7 +114,7 @@ export default function InteractiveShowcase() {
   };
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-[#131314] text-[#e5e2e3]">
+    <section className="relative h-screen w-full overflow-hidden text-[#e5e2e3]">
       <div className="grid h-full grid-cols-1 lg:grid-cols-[1fr_1.2fr_1fr]">
         {/* Sol Sutun: Bilgi */}
         <div className="relative z-10 flex flex-col justify-between p-8 lg:p-14">

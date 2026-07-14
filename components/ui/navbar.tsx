@@ -1,19 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Flower2, Menu, X } from "lucide-react";
+import { Flower2, Menu, Phone, Search, ShoppingBag, X } from "lucide-react";
+import { useCart } from "@/components/cart/cart-context";
 
 const NAV_LINKS = [
-  { href: "#ozellikler", label: "Özellikler" },
-  { href: "#yorumlar", label: "Yorumlar" },
-  { href: "#fiyatlandirma", label: "Fiyatlandırma" },
-  { href: "#sss", label: "SSS" },
+  { href: "/vitrin", label: "Çiçekler" },
+  { href: "#ozellikler", label: "Özel Günler" },
+  { href: "#yorumlar", label: "Hakkımızda" },
+  { href: "#sss", label: "İletişim" },
 ];
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { count, openCart } = useCart();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 8);
@@ -28,46 +31,66 @@ export default function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        isScrolled
-          ? "bg-[#FAFAFA]/80 shadow-sm backdrop-blur-md"
-          : "bg-transparent"
+        isScrolled ? "bg-[#f4f2ef]/85 shadow-sm backdrop-blur-md" : "bg-transparent"
       }`}
     >
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <a href="#" className="flex items-center gap-2">
-          <Flower2 className="h-6 w-6 text-emerald-900" />
-          <span className="font-serif text-xl font-bold text-emerald-900">
-            Çiçek Bankası
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#33323a]/15">
+            <Flower2 className="h-5 w-5 text-[#d9594c]" />
           </span>
-        </a>
+          <span className="font-serif text-2xl font-bold tracking-wide text-[#33323a]">
+            BLOOM
+          </span>
+        </Link>
 
         <div className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
             <a
-              key={link.href}
+              key={link.label}
               href={link.href}
-              className="text-sm font-medium text-slate-700 transition-colors hover:text-emerald-900"
+              className="text-sm font-medium text-[#33323a]/70 transition-colors hover:text-[#d9594c]"
             >
               {link.label}
             </a>
           ))}
         </div>
 
-        <a
-          href="#fiyatlandirma"
-          className="hidden rounded-lg bg-emerald-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-emerald-800 md:inline-block"
-        >
-          Sipariş Ver
-        </a>
+        <div className="flex items-center gap-4">
+          <span className="hidden items-center gap-1.5 text-xs text-[#33323a]/60 lg:flex">
+            <Phone className="h-3.5 w-3.5" />
+            +90 512 345 678
+          </span>
+          <button
+            type="button"
+            aria-label="Ara"
+            className="hidden h-9 w-9 items-center justify-center rounded-full text-[#33323a] transition-colors hover:text-[#d9594c] sm:flex"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={openCart}
+            aria-label="Sepeti aç"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition-colors hover:text-[#d9594c]"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            {count > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#d9594c] px-1 text-[10px] font-bold text-white">
+                {count}
+              </span>
+            )}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen((open) => !open)}
-          className="inline-flex items-center justify-center rounded-md p-2 text-emerald-900 md:hidden"
-          aria-label={isMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
-        >
-          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((o) => !o)}
+            className="flex h-9 w-9 items-center justify-center rounded-md text-[#33323a] md:hidden"
+            aria-label={isMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -77,26 +100,19 @@ export default function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="overflow-hidden bg-[#FAFAFA]/95 backdrop-blur-md md:hidden"
+            className="overflow-hidden bg-[#f4f2ef]/95 backdrop-blur-md md:hidden"
           >
-            <div className="flex flex-col gap-4 px-4 pb-6 pt-2 sm:px-6">
+            <div className="flex flex-col gap-4 px-6 pb-6 pt-2">
               {NAV_LINKS.map((link) => (
                 <a
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="text-base font-medium text-slate-700 hover:text-emerald-900"
+                  className="text-base font-medium text-[#33323a]/80 hover:text-[#d9594c]"
                 >
                   {link.label}
                 </a>
               ))}
-              <a
-                href="#fiyatlandirma"
-                onClick={() => setIsMenuOpen(false)}
-                className="mt-2 rounded-lg bg-emerald-900 px-5 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-emerald-800"
-              >
-                Sipariş Ver
-              </a>
             </div>
           </motion.div>
         )}

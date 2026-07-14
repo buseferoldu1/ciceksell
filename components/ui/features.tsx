@@ -35,8 +35,8 @@ export default function Features() {
           transition={{ duration: 0.6 }}
           className="mx-auto mb-16 max-w-2xl text-center"
         >
-          <h2 className="mb-4 font-serif text-3xl font-bold text-emerald-900 md:text-4xl">
-            Neden Çiçek Bankası?
+          <h2 className="mb-4 font-serif text-3xl font-bold text-[#33323a] md:text-4xl">
+            Neden BLOOM?
           </h2>
           <p className="text-lg text-slate-600">
             Her aranjman, sevdiklerinize doğanın zarafetini taşıması için özenle
@@ -53,12 +53,12 @@ export default function Features() {
               viewport={{ once: true, amount: 0.4 }}
               transition={{ duration: 0.6, delay: index * 0.15 }}
               whileHover={{ y: -6 }}
-              className="rounded-2xl border border-emerald-900/10 bg-white p-8 shadow-sm transition-shadow duration-300 hover:shadow-lg"
+              className="rounded-2xl border border-[#d9594c]/12 bg-white p-8 shadow-sm transition-shadow duration-300 hover:shadow-lg"
             >
-              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-900/10">
-                <feature.icon className="h-6 w-6 text-emerald-900" />
+              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#d9594c]/10">
+                <feature.icon className="h-6 w-6 text-[#d9594c]" />
               </div>
-              <h3 className="mb-2 font-serif text-xl font-bold text-emerald-900">
+              <h3 className="mb-2 font-serif text-xl font-bold text-[#33323a]">
                 {feature.title}
               </h3>
               <p className="text-slate-600">{feature.description}</p>

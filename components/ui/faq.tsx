@@ -45,7 +45,7 @@ export default function Faq() {
           transition={{ duration: 0.6 }}
           className="mb-12 text-center"
         >
-          <h2 className="mb-4 font-serif text-3xl font-bold text-emerald-900 md:text-4xl">
+          <h2 className="mb-4 font-serif text-3xl font-bold text-[#33323a] md:text-4xl">
             Sıkça Sorulan Sorular
           </h2>
           <p className="text-lg text-slate-600">
@@ -63,7 +63,7 @@ export default function Faq() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.4 }}
                 transition={{ duration: 0.5, delay: index * 0.08 }}
-                className="overflow-hidden rounded-xl border border-emerald-900/10 bg-[#FAFAFA]"
+                className="overflow-hidden rounded-xl border border-[#d9594c]/12 bg-[#FAFAFA]"
               >
                 <button
                   type="button"
@@ -71,11 +71,11 @@ export default function Faq() {
                   className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
                   aria-expanded={isOpen}
                 >
-                  <span className="font-semibold text-emerald-900">
+                  <span className="font-semibold text-[#33323a]">
                     {faq.question}
                   </span>
                   <ChevronDown
-                    className={`h-5 w-5 shrink-0 text-emerald-900 transition-transform duration-300 ${
+                    className={`h-5 w-5 shrink-0 text-[#33323a] transition-transform duration-300 ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   />
