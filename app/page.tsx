@@ -3,6 +3,7 @@ import FractalBloomHero from "@/components/ui/fractal-bloom-hero";
 import Features from "@/components/ui/features";
 import SocialProof from "@/components/ui/social-proof";
 import Pricing from "@/components/ui/pricing";
+import Faq from "@/components/ui/faq";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <Features />
       <SocialProof />
       <Pricing />
+      <Faq />
     </main>
   );
 }
