@@ -20,32 +20,31 @@ const CATEGORIES: { key: CategoryKey; label: string }[] = [
   { key: "ortancalar", label: "Ortancalar" },
 ];
 
-// NOT: Gorseller picsum.photos placeholder'laridir — gercek urun
-// fotograflarinizla degistirin.
+// Gorseller: Wikimedia Commons (bkz. public/flowers/ATTRIBUTION.md)
 const CATALOG: Record<CategoryKey, Product[]> = {
   guller: [
-    { id: "g1", name: "Kadife Gece", tag: "Bordo Gül Buketi", price: "₺549", image: "https://picsum.photos/seed/gul-kadife/600/750" },
-    { id: "g2", name: "Beyaz Masal", tag: "Beyaz Gül Aranjmanı", price: "₺449", image: "https://picsum.photos/seed/gul-beyaz/600/750" },
-    { id: "g3", name: "Pembe Sabah", tag: "Pembe Gül Buketi", price: "₺479", image: "https://picsum.photos/seed/gul-pembe/600/750" },
-    { id: "g4", name: "Kızıl Tutku", tag: "Kırmızı Gül Kutusu", price: "₺599", image: "https://picsum.photos/seed/gul-kizil/600/750" },
-    { id: "g5", name: "Şampanya Rüyası", tag: "Krem Gül Aranjmanı", price: "₺649", image: "https://picsum.photos/seed/gul-sampanya/600/750" },
-    { id: "g6", name: "Bahçe Romansı", tag: "Karışık Gül Sepeti", price: "₺529", image: "https://picsum.photos/seed/gul-bahce/600/750" },
+    { id: "g1", name: "Kadife Gece", tag: "Bordo Gül Buketi", price: "₺549", image: "/flowers/gul-1.jpg" },
+    { id: "g2", name: "Beyaz Masal", tag: "Beyaz Gül Aranjmanı", price: "₺449", image: "/flowers/gul-2.jpg" },
+    { id: "g3", name: "Pembe Sabah", tag: "Pembe Gül Buketi", price: "₺479", image: "/flowers/gul-3.jpg" },
+    { id: "g4", name: "Kızıl Tutku", tag: "Kırmızı Gül Kutusu", price: "₺599", image: "/flowers/gul-4.jpg" },
+    { id: "g5", name: "Şampanya Rüyası", tag: "Krem Gül Aranjmanı", price: "₺649", image: "/flowers/gul-5.jpg" },
+    { id: "g6", name: "Bahçe Romansı", tag: "Karışık Gül Sepeti", price: "₺529", image: "/flowers/gul-6.jpg" },
   ],
   orkideler: [
-    { id: "o1", name: "Kristal Beyaz", tag: "Tek Dal Beyaz Orkide", price: "₺749", image: "https://picsum.photos/seed/orkide-kristal/600/750" },
-    { id: "o2", name: "Mor Düş", tag: "Çift Dal Mor Orkide", price: "₺799", image: "https://picsum.photos/seed/orkide-mor/600/750" },
-    { id: "o3", name: "Fildişi Zarafet", tag: "Seramik Saksıda Orkide", price: "₺829", image: "https://picsum.photos/seed/orkide-fildisi/600/750" },
-    { id: "o4", name: "Gün Doğumu", tag: "Sarı Benekli Orkide", price: "₺779", image: "https://picsum.photos/seed/orkide-gun/600/750" },
-    { id: "o5", name: "Zümrüt Vadi", tag: "Yeşil Uçlu Orkide", price: "₺859", image: "https://picsum.photos/seed/orkide-zumrut/600/750" },
-    { id: "o6", name: "İpek Dokunuş", tag: "Üç Dal Premium Orkide", price: "₺899", image: "https://picsum.photos/seed/orkide-ipek/600/750" },
+    { id: "o1", name: "Kristal Beyaz", tag: "Tek Dal Beyaz Orkide", price: "₺749", image: "/flowers/orkide-1.jpg" },
+    { id: "o2", name: "Mor Düş", tag: "Mor Toprak Orkidesi", price: "₺799", image: "/flowers/orkide-2.jpg" },
+    { id: "o3", name: "Fildişi Zarafet", tag: "Beyaz Orkide Dalı", price: "₺829", image: "/flowers/orkide-3.jpg" },
+    { id: "o4", name: "Gün Doğumu", tag: "Altın Sarısı Orkide", price: "₺779", image: "/flowers/orkide-4.jpg" },
+    { id: "o5", name: "Zümrüt Vadi", tag: "Phalaenopsis Orkide", price: "₺859", image: "/flowers/orkide-5.jpg" },
+    { id: "o6", name: "İpek Dokunuş", tag: "Egzotik Orkide Serisi", price: "₺899", image: "/flowers/orkide-6.jpg" },
   ],
   ortancalar: [
-    { id: "h1", name: "Mavi Bulut", tag: "Mavi Ortanca Demeti", price: "₺389", image: "https://picsum.photos/seed/ortanca-mavi/600/750" },
-    { id: "h2", name: "Lila Bahçe", tag: "Lila Ortanca Aranjmanı", price: "₺419", image: "https://picsum.photos/seed/ortanca-lila/600/750" },
-    { id: "h3", name: "Pudra Küre", tag: "Pembe Ortanca Buketi", price: "₺399", image: "https://picsum.photos/seed/ortanca-pudra/600/750" },
-    { id: "h4", name: "Okyanus Esintisi", tag: "Mavi-Beyaz Ortanca", price: "₺449", image: "https://picsum.photos/seed/ortanca-okyanus/600/750" },
-    { id: "h5", name: "Beyaz Köpük", tag: "Beyaz Ortanca Sepeti", price: "₺429", image: "https://picsum.photos/seed/ortanca-beyaz/600/750" },
-    { id: "h6", name: "Gökkuşağı Demeti", tag: "Karışık Ortanca", price: "₺469", image: "https://picsum.photos/seed/ortanca-gokkusagi/600/750" },
+    { id: "h1", name: "Mavi Bulut", tag: "Çiy Damlalı Mavi Ortanca", price: "₺389", image: "/flowers/ortanca-1.jpg" },
+    { id: "h2", name: "Lila Bahçe", tag: "Lila Ortanca Aranjmanı", price: "₺419", image: "/flowers/ortanca-2.jpg" },
+    { id: "h3", name: "Pudra Küre", tag: "Pembe Ortanca Buketi", price: "₺399", image: "/flowers/ortanca-3.jpg" },
+    { id: "h4", name: "Okyanus Esintisi", tag: "Fuşya Ortanca Demeti", price: "₺449", image: "/flowers/ortanca-4.jpg" },
+    { id: "h5", name: "Beyaz Köpük", tag: "Beyaz Panikula Ortanca", price: "₺429", image: "/flowers/ortanca-5.jpg" },
+    { id: "h6", name: "Gökkuşağı Demeti", tag: "Karışık Ortanca", price: "₺469", image: "/flowers/ortanca-6.jpg" },
   ],
 };
 

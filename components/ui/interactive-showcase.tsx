@@ -20,9 +20,7 @@ interface Flower {
   origin: string;
   family: string;
   story: string;
-  // NOT: Bunlar yer tutucu (placeholder) gorsellerdir. Gercek urun
-  // fotograflarinizi (tercihen alfa kanalli / seffaf arka planli PNG)
-  // buraya koyun.
+  // Gorseller: Wikimedia Commons (bkz. public/flowers/ATTRIBUTION.md)
   image: string;
   thumbnail: string;
 }
@@ -39,8 +37,8 @@ const FLOWERS: Flower[] = [
     family: "Rosaceae",
     story:
       "Güllerimiz gün doğumundan önce toplanır ve en yoğun kokusunu koruması için soğuk zincirde atölyemize taşınır.",
-    image: "https://picsum.photos/seed/gul-vitrin/900/1200",
-    thumbnail: "https://picsum.photos/seed/gul-vitrin-thumb/200/200",
+    image: "/flowers/gul.jpg",
+    thumbnail: "/flowers/gul-thumb.jpg",
   },
   {
     id: 2,
@@ -53,8 +51,8 @@ const FLOWERS: Flower[] = [
     family: "Orchidaceae",
     story:
       "Orkidelerimiz el işçiliğiyle hazırlanan özel serada haftalar süren bir olgunlaşma sürecinden geçer.",
-    image: "https://picsum.photos/seed/orkide-vitrin/900/1200",
-    thumbnail: "https://picsum.photos/seed/orkide-vitrin-thumb/200/200",
+    image: "/flowers/orkide.jpg",
+    thumbnail: "/flowers/orkide-thumb.jpg",
   },
   {
     id: 3,
@@ -67,8 +65,8 @@ const FLOWERS: Flower[] = [
     family: "Hydrangeaceae",
     story:
       "Ortancalarımız toprağın asidine göre renk değiştirir; her demet doğanın o güne özel imzasını taşır.",
-    image: "https://picsum.photos/seed/ortanca-vitrin/900/1200",
-    thumbnail: "https://picsum.photos/seed/ortanca-vitrin-thumb/200/200",
+    image: "/flowers/ortanca.jpg",
+    thumbnail: "/flowers/ortanca-thumb.jpg",
   },
 ];
 
@@ -94,10 +92,12 @@ export default function InteractiveShowcase() {
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const springConfig = { stiffness: 120, damping: 18 };
-  const rotateX = useSpring(useTransform(mouseY, [0, 1], [8, -8]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-8, 8]), springConfig);
-  const translateX = useSpring(useTransform(mouseX, [0, 1], [-14, 14]), springConfig);
-  const translateY = useSpring(useTransform(mouseY, [0, 1], [-10, 10]), springConfig);
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [10, -10]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-10, 10]), springConfig);
+  const translateX = useSpring(useTransform(mouseX, [0, 1], [-18, 18]), springConfig);
+  const translateY = useSpring(useTransform(mouseY, [0, 1], [-12, 12]), springConfig);
+  // Zemin golgesi imlecin tersine kayar — derinlik hissi
+  const shadowX = useSpring(useTransform(mouseX, [0, 1], [10, -10]), springConfig);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -174,6 +174,18 @@ export default function InteractiveShowcase() {
         >
           <div className="pointer-events-none absolute h-[70%] w-[70%] rounded-full bg-[#f6b6be]/10 blur-3xl" />
 
+          {/* Zemin golgesi: cicek nefes aldikca buyuyup kuculur, imlecle kayar */}
+          <motion.div
+            style={{ x: shadowX }}
+            className="pointer-events-none absolute bottom-[7%] z-0 h-8 w-[46%]"
+          >
+            <motion.div
+              animate={{ scaleX: [1, 0.88, 1], opacity: [0.55, 0.4, 0.55] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+              className="h-full w-full rounded-[50%] bg-black blur-xl"
+            />
+          </motion.div>
+
           <motion.div
             style={{
               rotateX,
@@ -182,7 +194,7 @@ export default function InteractiveShowcase() {
               y: translateY,
               transformPerspective: 900,
             }}
-            className="relative z-10 flex h-[76%] max-h-[600px] items-center justify-center"
+            className="relative z-10 flex h-[76%] max-h-[600px] w-full items-center justify-center"
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -191,7 +203,7 @@ export default function InteractiveShowcase() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.1 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="h-full"
+                className="flex h-full max-w-full items-center justify-center"
               >
                 {/* Nefes alma efekti */}
                 <motion.div
@@ -201,17 +213,17 @@ export default function InteractiveShowcase() {
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  className="h-full"
+                  className="flex h-full max-w-full items-center justify-center"
                 >
                   <img
                     src={flower.image}
                     alt={flower.name}
-                    className="h-full w-auto object-cover"
+                    className="h-full w-auto max-w-full object-contain"
                     style={{
                       maskImage:
-                        "radial-gradient(ellipse at center, black 55%, transparent 88%)",
+                        "radial-gradient(ellipse at center, black 45%, transparent 76%)",
                       WebkitMaskImage:
-                        "radial-gradient(ellipse at center, black 55%, transparent 88%)",
+                        "radial-gradient(ellipse at center, black 45%, transparent 76%)",
                     }}
                   />
                 </motion.div>
