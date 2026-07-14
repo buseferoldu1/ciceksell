@@ -7,6 +7,8 @@ export interface Product {
   price: number;
   image: string;
   category: CategoryKey;
+  /** Varsa, imleçle 360° döndürülebilen .glb modeli (public/models/...) */
+  model?: string;
 }
 
 export const CATEGORIES: { key: CategoryKey; label: string }[] = [
@@ -42,6 +44,28 @@ export const CATALOG: Record<CategoryKey, Product[]> = {
     { id: "h6", name: "Gökkuşağı Demeti", tag: "Karışık Ortanca", price: 469, image: "/flowers/ortanca-6.jpg", category: "ortancalar" },
   ],
 };
+
+// Imlecle 360 derece dondurulebilen 3D urunler (public/models/*.glb)
+export const MODELS_3D: Product[] = [
+  {
+    id: "m1",
+    name: "Orkide Bahçesi",
+    tag: "Seramik Saksıda Mini Mor Orkide",
+    price: 1290,
+    image: "/flowers/orkide-2.jpg",
+    category: "orkideler",
+    model: "/models/orkide-bahce.glb",
+  },
+  {
+    id: "m2",
+    name: "Kraliyet Gülleri",
+    tag: "Siyah Vazoda Rengârenk Güller",
+    price: 1590,
+    image: "/flowers/gul-1.jpg",
+    category: "guller",
+    model: "/models/royal-guller.glb",
+  },
+];
 
 export const FREE_SHIPPING_THRESHOLD = 500;
 export const SHIPPING_FEE = 49;
