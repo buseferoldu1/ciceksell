@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Flower2 } from "lucide-react";
 
@@ -141,10 +142,13 @@ export default function FractalBloomHero() {
         </motion.p>
 
         <motion.div custom={3} variants={fadeUpVariants} initial="hidden" animate="visible">
-          <button className="mx-auto flex items-center gap-2 rounded-lg bg-emerald-900 px-8 py-4 font-semibold text-white shadow-lg transition-colors duration-300 hover:bg-emerald-800">
+          <Link
+            href="/vitrin"
+            className="mx-auto flex items-center gap-2 rounded-lg bg-emerald-900 px-8 py-4 font-semibold text-white shadow-lg transition-colors duration-300 hover:bg-emerald-800"
+          >
             Koleksiyonu İncele
             <ArrowRight className="h-5 w-5" />
-          </button>
+          </Link>
         </motion.div>
       </div>
     </div>

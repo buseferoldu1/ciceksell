@@ -2,51 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { X } from "lucide-react";
+import { ShoppingBag, X } from "lucide-react";
+import { CATALOG, CATEGORIES, type CategoryKey } from "@/lib/products";
+import { useCart } from "@/components/cart/cart-context";
+import ProductCard from "./product-card";
 
-export type CategoryKey = "guller" | "orkideler" | "ortancalar";
-
-interface Product {
-  id: string;
-  name: string;
-  tag: string;
-  price: string;
-  image: string;
-}
-
-const CATEGORIES: { key: CategoryKey; label: string }[] = [
-  { key: "guller", label: "Güller" },
-  { key: "orkideler", label: "Orkideler" },
-  { key: "ortancalar", label: "Ortancalar" },
-];
-
-// Gorseller: Wikimedia Commons (bkz. public/flowers/ATTRIBUTION.md)
-const CATALOG: Record<CategoryKey, Product[]> = {
-  guller: [
-    { id: "g1", name: "Kadife Gece", tag: "Bordo Gül Buketi", price: "₺549", image: "/flowers/gul-1.jpg" },
-    { id: "g2", name: "Beyaz Masal", tag: "Beyaz Gül Aranjmanı", price: "₺449", image: "/flowers/gul-2.jpg" },
-    { id: "g3", name: "Pembe Sabah", tag: "Pembe Gül Buketi", price: "₺479", image: "/flowers/gul-3.jpg" },
-    { id: "g4", name: "Kızıl Tutku", tag: "Kırmızı Gül Kutusu", price: "₺599", image: "/flowers/gul-4.jpg" },
-    { id: "g5", name: "Şampanya Rüyası", tag: "Krem Gül Aranjmanı", price: "₺649", image: "/flowers/gul-5.jpg" },
-    { id: "g6", name: "Bahçe Romansı", tag: "Karışık Gül Sepeti", price: "₺529", image: "/flowers/gul-6.jpg" },
-  ],
-  orkideler: [
-    { id: "o1", name: "Kristal Beyaz", tag: "Tek Dal Beyaz Orkide", price: "₺749", image: "/flowers/orkide-1.jpg" },
-    { id: "o2", name: "Mor Düş", tag: "Mor Toprak Orkidesi", price: "₺799", image: "/flowers/orkide-2.jpg" },
-    { id: "o3", name: "Fildişi Zarafet", tag: "Beyaz Orkide Dalı", price: "₺829", image: "/flowers/orkide-3.jpg" },
-    { id: "o4", name: "Gün Doğumu", tag: "Altın Sarısı Orkide", price: "₺779", image: "/flowers/orkide-4.jpg" },
-    { id: "o5", name: "Zümrüt Vadi", tag: "Phalaenopsis Orkide", price: "₺859", image: "/flowers/orkide-5.jpg" },
-    { id: "o6", name: "İpek Dokunuş", tag: "Egzotik Orkide Serisi", price: "₺899", image: "/flowers/orkide-6.jpg" },
-  ],
-  ortancalar: [
-    { id: "h1", name: "Mavi Bulut", tag: "Çiy Damlalı Mavi Ortanca", price: "₺389", image: "/flowers/ortanca-1.jpg" },
-    { id: "h2", name: "Lila Bahçe", tag: "Lila Ortanca Aranjmanı", price: "₺419", image: "/flowers/ortanca-2.jpg" },
-    { id: "h3", name: "Pudra Küre", tag: "Pembe Ortanca Buketi", price: "₺399", image: "/flowers/ortanca-3.jpg" },
-    { id: "h4", name: "Okyanus Esintisi", tag: "Fuşya Ortanca Demeti", price: "₺449", image: "/flowers/ortanca-4.jpg" },
-    { id: "h5", name: "Beyaz Köpük", tag: "Beyaz Panikula Ortanca", price: "₺429", image: "/flowers/ortanca-5.jpg" },
-    { id: "h6", name: "Gökkuşağı Demeti", tag: "Karışık Ortanca", price: "₺469", image: "/flowers/ortanca-6.jpg" },
-  ],
-};
+export type { CategoryKey };
 
 const gridVariants: Variants = {
   hidden: {},
@@ -55,21 +16,6 @@ const gridVariants: Variants = {
   },
   exit: {
     transition: { staggerChildren: 0.03, staggerDirection: -1 },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 32, scale: 0.95 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.45, ease: "easeOut" },
-  },
-  exit: {
-    opacity: 0,
-    y: -16,
-    transition: { duration: 0.2, ease: "easeIn" },
   },
 };
 
@@ -83,6 +29,7 @@ export default function FlowerCatalog({
   onClose,
 }: FlowerCatalogProps) {
   const [category, setCategory] = useState<CategoryKey>(initialCategory);
+  const { addItem, count, openCart } = useCart();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -114,17 +61,40 @@ export default function FlowerCatalog({
             Katalog
           </h2>
         </motion.div>
-        <motion.button
-          type="button"
-          onClick={onClose}
-          aria-label="Kataloğu kapat"
-          whileHover={{ rotate: 90, scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#e5e2e3]/15 text-[#e5e2e3] hover:border-[#f6b6be]/60 hover:text-[#f6b6be]"
-        >
-          <X className="h-5 w-5" />
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <motion.button
+            type="button"
+            onClick={openCart}
+            aria-label="Sepeti aç"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#e5e2e3]/15 text-[#e5e2e3] hover:border-[#f6b6be]/60 hover:text-[#f6b6be]"
+          >
+            <ShoppingBag className="h-5 w-5" />
+            {count > 0 && (
+              <motion.span
+                key={count}
+                initial={{ scale: 0.4 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#f6b6be] px-1 text-[10px] font-bold text-[#131314]"
+              >
+                {count}
+              </motion.span>
+            )}
+          </motion.button>
+          <motion.button
+            type="button"
+            onClick={onClose}
+            aria-label="Kataloğu kapat"
+            whileHover={{ rotate: 90, scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[#e5e2e3]/15 text-[#e5e2e3] hover:border-[#f6b6be]/60 hover:text-[#f6b6be]"
+          >
+            <X className="h-5 w-5" />
+          </motion.button>
+        </div>
       </div>
 
       {/* Kategori sekmeleri */}
@@ -169,59 +139,12 @@ export default function FlowerCatalog({
             className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 px-6 py-10 sm:grid-cols-2 lg:grid-cols-3 lg:px-10"
           >
             {CATALOG[category].map((product, i) => (
-              <motion.div
+              <ProductCard
                 key={product.id}
-                variants={cardVariants}
-                whileHover={{ y: -10, rotate: i % 2 === 0 ? -0.6 : 0.6 }}
-                transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
-              >
-                <div className="relative aspect-[4/5] overflow-hidden">
-                  {/* Nefes alma efekti */}
-                  <motion.div
-                    animate={{ scale: [1, 1.035, 1] }}
-                    transition={{
-                      duration: 4.5 + (i % 3),
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: i * 0.4,
-                    }}
-                    className="h-full w-full"
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                    />
-                  </motion.div>
-
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#131314]/70 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-                  <div className="absolute inset-x-4 bottom-4 translate-y-16 opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:opacity-100">
-                    <button
-                      type="button"
-                      className="w-full rounded-full bg-[#f6b6be] py-2.5 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3]"
-                    >
-                      İncele
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-5">
-                  <div>
-                    <h3 className="font-serif text-lg font-bold text-[#e5e2e3]">
-                      {product.name}
-                    </h3>
-                    <p className="mt-0.5 text-xs text-[#e5e2e3]/50">
-                      {product.tag}
-                    </p>
-                  </div>
-                  <span className="font-serif text-lg font-bold text-[#f6b6be]">
-                    {product.price}
-                  </span>
-                </div>
-              </motion.div>
+                product={product}
+                index={i}
+                onAdd={addItem}
+              />
             ))}
           </motion.div>
         </AnimatePresence>

@@ -8,8 +8,10 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import FlowerCatalog, { type CategoryKey } from "./flower-catalog";
+import { ChevronLeft, ChevronRight, ShoppingBag, Sparkles } from "lucide-react";
+import FlowerCatalog from "./flower-catalog";
+import { useCart } from "@/components/cart/cart-context";
+import type { CategoryKey } from "@/lib/products";
 
 interface Flower {
   id: number;
@@ -82,6 +84,7 @@ const textVariants = {
 export default function InteractiveShowcase() {
   const [index, setIndex] = useState(0);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const { count, openCart } = useCart();
   const flower = FLOWERS[index];
 
   const goTo = (i: number) => setIndex((i + FLOWERS.length) % FLOWERS.length);
@@ -251,7 +254,7 @@ export default function InteractiveShowcase() {
 
         {/* Sag Sutun: Detay */}
         <div className="relative z-10 flex flex-col justify-between p-8 lg:p-14">
-          <nav className="flex justify-end gap-8">
+          <nav className="flex items-center justify-end gap-8">
             {NAV_LINKS.map((link) => (
               <a
                 key={link}
@@ -261,6 +264,19 @@ export default function InteractiveShowcase() {
                 {link}
               </a>
             ))}
+            <button
+              type="button"
+              onClick={openCart}
+              aria-label="Sepeti aç"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e2e3]/15 text-[#e5e2e3] transition-colors hover:border-[#f6b6be]/60 hover:text-[#f6b6be]"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              {count > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#f6b6be] px-1 text-[10px] font-bold text-[#131314]">
+                  {count}
+                </span>
+              )}
+            </button>
           </nav>
 
           <div className="flex flex-col items-end text-right">
@@ -287,6 +303,7 @@ export default function InteractiveShowcase() {
 
             <button
               type="button"
+              onClick={() => setCatalogOpen(true)}
               className="mt-8 rounded-full border border-[#f6b6be]/50 px-7 py-3 text-xs font-semibold uppercase tracking-widest text-[#f6b6be] transition-colors hover:bg-[#f6b6be] hover:text-[#131314]"
             >
               Detayları İncele
