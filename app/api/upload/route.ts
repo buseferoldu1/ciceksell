@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { put } from "@vercel/blob";
 import { isAdmin } from "@/lib/admin-key";
 
 export const dynamic = "force-dynamic";
@@ -12,15 +13,21 @@ const ALLOWED = new Map([
 ]);
 const MAX_SIZE = 8 * 1024 * 1024; // 8 MB
 
+// Uretimde (Vercel) dosya sistemi salt-okunurdur; gorseller Blob'a
+// yuklenir. Yerelde token yoksa public/uploads klasorune yazilir.
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
+
 export async function POST(req: Request) {
   if (!isAdmin(req)) {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
+
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "file alanı zorunlu" }, { status: 400 });
   }
+
   const ext = ALLOWED.get(file.type);
   if (!ext) {
     return NextResponse.json(
@@ -34,12 +41,24 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(dir, { recursive: true });
+
   // Dosya adi tamamen sunucuda uretilir (path traversal onlemi)
   const name = `urun-${Date.now().toString(36)}-${Math.random()
     .toString(36)
     .slice(2, 8)}${ext}`;
+
+  if (BLOB_TOKEN) {
+    const blob = await put(`urunler/${name}`, file, {
+      access: "public",
+      contentType: file.type,
+      token: BLOB_TOKEN,
+    });
+    return NextResponse.json({ path: blob.url }, { status: 201 });
+  }
+
+  // Yerel gelistirme yedegi
+  const dir = path.join(process.cwd(), "public", "uploads");
+  await fs.mkdir(dir, { recursive: true });
   const buf = Buffer.from(await file.arrayBuffer());
   await fs.writeFile(path.join(dir, name), buf);
   return NextResponse.json({ path: `/uploads/${name}` }, { status: 201 });
