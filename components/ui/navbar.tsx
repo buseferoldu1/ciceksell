@@ -5,12 +5,13 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Flower2, Menu, Phone, Search, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
+import { SITE } from "@/lib/site";
 
 const NAV_LINKS = [
   { href: "/katalog", label: "Katalog" },
   { href: "/vitrin", label: "Atölye (3D)" },
-  { href: "/#yorumlar", label: "Hakkımızda" },
-  { href: "/#sss", label: "İletişim" },
+  { href: "/#hakkimizda", label: "Hakkımızda" },
+  { href: "/#iletisim", label: "İletişim" },
 ];
 
 export default function Navbar() {
@@ -39,8 +40,13 @@ export default function Navbar() {
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#33323a]/15">
             <Flower2 className="h-5 w-5 text-[#d9594c]" />
           </span>
-          <span className="font-serif text-2xl font-bold tracking-wide text-[#33323a]">
-            Çiçeksel
+          <span className="flex flex-col leading-none">
+            <span className="font-serif text-2xl font-bold tracking-wide text-[#33323a]">
+              {SITE.name}
+            </span>
+            <span className="text-[10px] italic text-[#33323a]/45">
+              {SITE.tagline}
+            </span>
           </span>
         </Link>
 
@@ -57,10 +63,13 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="hidden items-center gap-1.5 text-xs text-[#33323a]/60 lg:flex">
+          <a
+            href={SITE.phoneHref}
+            className="hidden items-center gap-1.5 text-xs text-[#33323a]/60 transition-colors hover:text-[#d9594c] lg:flex"
+          >
             <Phone className="h-3.5 w-3.5" />
-            +90 512 345 678
-          </span>
+            {SITE.phone}
+          </a>
           <button
             type="button"
             aria-label="Ara"

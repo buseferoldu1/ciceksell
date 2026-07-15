@@ -2,9 +2,9 @@ import Navbar from "@/components/ui/navbar";
 import BloomHero from "@/components/ui/bloom-hero";
 import Features from "@/components/ui/features";
 import ModelShowcase from "@/components/ui/model-showcase";
-import SocialProof from "@/components/ui/social-proof";
-import Pricing from "@/components/ui/pricing";
+import About from "@/components/ui/about";
 import Faq from "@/components/ui/faq";
+import Contact from "@/components/ui/contact";
 import Footer from "@/components/ui/footer";
 import { getProducts } from "@/lib/store";
 
@@ -22,9 +22,9 @@ export default async function Home() {
       <BloomHero products={products} />
       <Features />
       <ModelShowcase products={modelProducts} />
-      <SocialProof />
-      <Pricing />
+      <About />
       <Faq />
+      <Contact />
       <Footer />
     </main>
   );
