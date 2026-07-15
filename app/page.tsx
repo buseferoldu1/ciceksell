@@ -1,6 +1,7 @@
 import Navbar from "@/components/ui/navbar";
 import BloomHero from "@/components/ui/bloom-hero";
 import Features from "@/components/ui/features";
+import CircularGallerySection from "@/components/ui/circular-gallery-section";
 import ModelShowcase from "@/components/ui/model-showcase";
 import About from "@/components/ui/about";
 import Faq from "@/components/ui/faq";
@@ -21,6 +22,7 @@ export default async function Home() {
       <Navbar />
       <BloomHero products={products} />
       <Features />
+      <CircularGallerySection products={products} />
       <ModelShowcase products={modelProducts} />
       <About />
       <Faq />
