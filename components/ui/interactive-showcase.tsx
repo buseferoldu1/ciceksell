@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import { ChevronLeft, ChevronRight, ShoppingBag, Sparkles } from "lucide-react";
 import FlowerCatalog from "./flower-catalog";
+import ModelViewer from "./model-viewer";
 import { useCart } from "@/components/cart/cart-context";
 import type { CategoryKey } from "@/lib/products";
 
@@ -25,6 +26,8 @@ interface Flower {
   // Gorseller: Wikimedia Commons (bkz. public/flowers/ATTRIBUTION.md)
   image: string;
   thumbnail: string;
+  // Imlecle 360 derece dondurulebilen 3D model (public/models/*.glb)
+  model: string;
 }
 
 const FLOWERS: Flower[] = [
@@ -41,6 +44,7 @@ const FLOWERS: Flower[] = [
       "Güllerimiz gün doğumundan önce toplanır ve en yoğun kokusunu koruması için soğuk zincirde atölyemize taşınır.",
     image: "/flowers/gul.jpg",
     thumbnail: "/flowers/gul-thumb.jpg",
+    model: "/models/gul-3d.glb",
   },
   {
     id: 2,
@@ -55,6 +59,7 @@ const FLOWERS: Flower[] = [
       "Orkidelerimiz el işçiliğiyle hazırlanan özel serada haftalar süren bir olgunlaşma sürecinden geçer.",
     image: "/flowers/orkide.jpg",
     thumbnail: "/flowers/orkide-thumb.jpg",
+    model: "/models/orkide-3d.glb",
   },
   {
     id: 3,
@@ -69,6 +74,7 @@ const FLOWERS: Flower[] = [
       "Ortancalarımız toprağın asidine göre renk değiştirir; her demet doğanın o güne özel imzasını taşır.",
     image: "/flowers/ortanca.jpg",
     thumbnail: "/flowers/ortanca-thumb.jpg",
+    model: "/models/ortanca-3d.glb",
   },
 ];
 
@@ -91,15 +97,11 @@ export default function InteractiveShowcase() {
   const goNext = () => goTo(index + 1);
   const goPrev = () => goTo(index - 1);
 
-  // Imlec takibi: merkez gorsel farenin konumuna gore hafifce egilir ve kayar
+  // 360 derece dondurme model-viewer'in kendi imlec orbitiyle yapilir;
+  // fare konumu yalnizca zemin golgesini kaydirir (derinlik hissi).
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const springConfig = { stiffness: 120, damping: 18 };
-  const rotateX = useSpring(useTransform(mouseY, [0, 1], [10, -10]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-10, 10]), springConfig);
-  const translateX = useSpring(useTransform(mouseX, [0, 1], [-18, 18]), springConfig);
-  const translateY = useSpring(useTransform(mouseY, [0, 1], [-12, 12]), springConfig);
-  // Zemin golgesi imlecin tersine kayar — derinlik hissi
   const shadowX = useSpring(useTransform(mouseX, [0, 1], [10, -10]), springConfig);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -189,24 +191,15 @@ export default function InteractiveShowcase() {
             />
           </motion.div>
 
-          <motion.div
-            style={{
-              rotateX,
-              rotateY,
-              x: translateX,
-              y: translateY,
-              transformPerspective: 900,
-            }}
-            className="relative z-10 flex h-[76%] max-h-[600px] w-full items-center justify-center"
-          >
+          <div className="relative z-10 flex h-[76%] max-h-[600px] w-full items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
-                key={`image-${flower.id}`}
+                key={`model-${flower.id}`}
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.1 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="flex h-full max-w-full items-center justify-center"
+                className="h-full w-full"
               >
                 {/* Nefes alma efekti */}
                 <motion.div
@@ -216,23 +209,18 @@ export default function InteractiveShowcase() {
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  className="flex h-full max-w-full items-center justify-center"
+                  className="h-full w-full"
                 >
-                  <img
-                    src={flower.image}
+                  {/* Imlecle surukleyerek 360 derece dondurulebilir */}
+                  <ModelViewer
+                    src={flower.model}
                     alt={flower.name}
-                    className="h-full w-auto max-w-full object-contain"
-                    style={{
-                      maskImage:
-                        "radial-gradient(ellipse at center, black 45%, transparent 76%)",
-                      WebkitMaskImage:
-                        "radial-gradient(ellipse at center, black 45%, transparent 76%)",
-                    }}
+                    className="h-full w-full"
                   />
                 </motion.div>
               </motion.div>
             </AnimatePresence>
-          </motion.div>
+          </div>
 
           <button
             type="button"
