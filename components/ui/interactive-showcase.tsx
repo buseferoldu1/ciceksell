@@ -11,8 +11,10 @@ import {
 } from "framer-motion";
 import { ChevronLeft, ChevronRight, ShoppingBag, Sparkles } from "lucide-react";
 import ModelViewer from "./model-viewer";
+import { InstagramIcon } from "./icons";
 import { useCart } from "@/components/cart/cart-context";
 import type { CategoryKey } from "@/lib/products";
+import { SITE } from "@/lib/site";
 
 interface Flower {
   id: number;
@@ -78,8 +80,11 @@ const FLOWERS: Flower[] = [
   },
 ];
 
-const NAV_LINKS = ["Koleksiyon", "Atölye", "İletişim"];
-const SOCIALS = ["IG", "FB", "X"];
+const NAV_LINKS = [
+  { label: "Koleksiyon", href: "/katalog" },
+  { label: "Hakkımızda", href: "/#hakkimizda" },
+  { label: "İletişim", href: "/#iletisim" },
+];
 
 const textVariants = {
   initial: { opacity: 0, y: 20 },
@@ -214,6 +219,7 @@ export default function InteractiveShowcase() {
                   <ModelViewer
                     src={flower.model}
                     alt={flower.name}
+                    poster={flower.image}
                     className="h-full w-full"
                   />
                 </motion.div>
@@ -243,13 +249,13 @@ export default function InteractiveShowcase() {
         <div className="relative z-10 flex flex-col justify-between p-8 lg:p-14">
           <nav className="flex items-center justify-end gap-8">
             {NAV_LINKS.map((link) => (
-              <a
-                key={link}
-                href="#"
+              <Link
+                key={link.label}
+                href={link.href}
                 className="text-sm text-[#e5e2e3]/70 transition-colors hover:text-[#f6b6be]"
               >
-                {link}
-              </a>
+                {link.label}
+              </Link>
             ))}
             <button
               type="button"
@@ -296,17 +302,26 @@ export default function InteractiveShowcase() {
             </Link>
           </div>
 
-          <div className="flex justify-end gap-3">
-            {SOCIALS.map((social) => (
-              <a
-                key={social}
-                href="#"
-                aria-label={social}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e2e3]/15 text-xs font-semibold text-[#e5e2e3]/70 transition-colors hover:border-[#f6b6be]/60 hover:text-[#f6b6be]"
-              >
-                {social}
-              </a>
-            ))}
+          {/* Isletmenin yalnizca Instagram hesabi var (ciceksel.com) */}
+          <div className="flex items-center justify-end gap-3">
+            <motion.a
+              href={SITE.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              whileHover={{ scale: 1.12, rotate: -6 }}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e2e3]/15 text-[#e5e2e3]/70 transition-colors hover:border-[#f6b6be]/60 hover:text-[#f6b6be]"
+            >
+              <InstagramIcon className="h-4 w-4" />
+            </motion.a>
+            <a
+              href={SITE.phoneHref}
+              className="text-xs text-[#e5e2e3]/50 transition-colors hover:text-[#f6b6be]"
+            >
+              {SITE.phone}
+            </a>
           </div>
         </div>
       </div>

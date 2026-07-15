@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 import { CATALOG, formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/components/cart/cart-context";
 import FallingPetals from "./falling-petals";
+import Magnetic from "./magnetic";
 
 interface Slide {
   script: string;
@@ -93,25 +94,30 @@ export default function BloomHero({ products }: { products?: Product[] }) {
                 <span className="font-serif text-3xl font-bold text-[#d9594c]">
                   {formatPrice(slide.product.price)}
                 </span>
-                <motion.button
-                  type="button"
-                  onClick={() => addItem(slide.product)}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
-                  className="flex items-center gap-2 rounded-full bg-[#d9594c] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#d9594c]/25 transition-colors hover:bg-[#c2493d]"
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                  Sepete Ekle
-                </motion.button>
-                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                  <Link
-                    href="/katalog"
-                    className="flex items-center gap-2 rounded-full border-2 border-[#33323a]/15 px-7 py-3 text-sm font-semibold text-[#33323a] transition-colors hover:border-[#d9594c] hover:text-[#d9594c]"
+                {/* Imlec yaklasinca butonlar hafifce ona dogru cekilir */}
+                <Magnetic>
+                  <motion.button
+                    type="button"
+                    onClick={() => addItem(slide.product)}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="flex items-center gap-2 rounded-full bg-[#d9594c] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#d9594c]/25 transition-colors hover:bg-[#c2493d]"
                   >
-                    <Sparkles className="h-4 w-4" />
-                    Kataloğu Keşfet
-                  </Link>
-                </motion.div>
+                    <ShoppingBag className="h-4 w-4" />
+                    Sepete Ekle
+                  </motion.button>
+                </Magnetic>
+                <Magnetic>
+                  <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                    <Link
+                      href="/katalog"
+                      className="flex items-center gap-2 rounded-full border-2 border-[#33323a]/15 px-7 py-3 text-sm font-semibold text-[#33323a] transition-colors hover:border-[#d9594c] hover:text-[#d9594c]"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Kataloğu Keşfet
+                    </Link>
+                  </motion.div>
+                </Magnetic>
               </div>
             </motion.div>
           </AnimatePresence>

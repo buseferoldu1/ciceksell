@@ -18,6 +18,8 @@ import {
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_FEE,
 } from "@/lib/products";
+import PetalBurst from "@/components/ui/petal-burst";
+import FallingPetals from "@/components/ui/falling-petals";
 
 interface FormState {
   name: string;
@@ -126,25 +128,36 @@ export default function OdemePage() {
   };
 
   const inputCls = (err?: string) =>
-    `w-full rounded-lg border bg-white/[0.04] px-4 py-3 text-sm text-[#e5e2e3] placeholder-[#e5e2e3]/30 outline-none transition-colors focus:border-[#f6b6be]/60 ${
+    `w-full rounded-lg border bg-white/[0.04] px-4 py-3 text-sm text-[#e5e2e3] placeholder-[#e5e2e3]/30 outline-none transition-all duration-300 focus:border-[#f6b6be]/60 focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(246,182,190,0.12)] ${
       err ? "border-red-400/60" : "border-white/10"
     }`;
 
   if (status === "success") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#131314] px-4 text-[#e5e2e3]">
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#131314] px-4 text-[#e5e2e3]">
+        {/* Kutlama: yapraklar merkezden sacilir, ardindan usttan yagar */}
+        <PetalBurst />
+        <FallingPetals count={14} />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="max-w-md text-center"
+          className="relative z-10 max-w-md text-center"
         >
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
-            className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15"
+            className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15"
           >
+            {/* Disari dogru genisleyen halka */}
+            <motion.span
+              initial={{ scale: 0.8, opacity: 0.7 }}
+              animate={{ scale: [0.8, 1.8], opacity: [0.7, 0] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+              className="absolute inset-0 rounded-full border-2 border-emerald-400/50"
+            />
             <CheckCircle2 className="h-10 w-10 text-emerald-400" />
           </motion.div>
           <h1 className="font-serif text-3xl font-bold">Siparişiniz Alındı!</h1>
@@ -170,32 +183,51 @@ export default function OdemePage() {
   if (items.length === 0) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#131314] px-4 text-[#e5e2e3]">
-        <div className="text-center">
-          <Flower2 className="mx-auto mb-4 h-12 w-12 text-[#e5e2e3]/20" />
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [0, -6, 6, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Flower2 className="mx-auto mb-4 h-12 w-12 text-[#e5e2e3]/20" />
+          </motion.div>
           <h1 className="font-serif text-2xl font-bold">Sepetiniz boş</h1>
           <p className="mt-2 text-[#e5e2e3]/60">
             Ödeme yapabilmek için önce sepetinize çiçek ekleyin.
           </p>
-          <Link
-            href="/vitrin"
-            className="mt-6 inline-block rounded-full border border-[#f6b6be]/50 px-7 py-3 text-xs font-semibold uppercase tracking-widest text-[#f6b6be] transition-colors hover:bg-[#f6b6be] hover:text-[#131314]"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.96 }}
+            className="mt-6 inline-block"
           >
-            Kataloğa Git
-          </Link>
-        </div>
+            <Link
+              href="/katalog"
+              className="inline-block rounded-full border border-[#f6b6be]/50 px-7 py-3 text-xs font-semibold uppercase tracking-widest text-[#f6b6be] transition-colors hover:bg-[#f6b6be] hover:text-[#131314]"
+            >
+              Kataloğa Git
+            </Link>
+          </motion.div>
+        </motion.div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#131314] text-[#e5e2e3]">
-      <div className="mx-auto max-w-5xl px-4 py-10 lg:px-8">
+    <main className="relative min-h-screen overflow-hidden bg-[#131314] text-[#e5e2e3]">
+      {/* Zarif arka plan: seyrek dusen yapraklar */}
+      <FallingPetals count={8} />
+
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-10 lg:px-8">
         <Link
-          href="/vitrin"
-          className="inline-flex items-center gap-2 text-sm text-[#e5e2e3]/60 transition-colors hover:text-[#f6b6be]"
+          href="/katalog"
+          className="group inline-flex items-center gap-2 text-sm text-[#e5e2e3]/60 transition-colors hover:text-[#f6b6be]"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Vitrine dön
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          Kataloğa dön
         </Link>
 
         <motion.h1

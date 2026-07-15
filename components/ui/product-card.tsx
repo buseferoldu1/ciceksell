@@ -38,6 +38,9 @@ export default function ProductCard({ product, index, onAdd }: ProductCardProps)
   const springConfig = { stiffness: 200, damping: 20 };
   const rotateX = useSpring(useTransform(mouseY, [0, 1], [7, -7]), springConfig);
   const rotateY = useSpring(useTransform(mouseX, [0, 1], [-7, 7]), springConfig);
+  // Imleci takip eden parilti (kartin uzerinde gezinen isik)
+  const glowX = useTransform(mouseX, (v) => `${v * 100}%`);
+  const glowY = useTransform(mouseY, (v) => `${v * 100}%`);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -57,8 +60,20 @@ export default function ProductCard({ product, index, onAdd }: ProductCardProps)
       onMouseMove={handleMouseMove}
       onMouseLeave={resetMouse}
       style={{ rotateX, rotateY, transformPerspective: 800 }}
-      className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] [transform-style:preserve-3d]"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] [transform-style:preserve-3d]"
     >
+      {/* Imleci takip eden yumusak parilti */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background: useTransform(
+            [glowX, glowY],
+            ([gx, gy]) =>
+              `radial-gradient(240px circle at ${gx} ${gy}, rgba(246,182,190,0.16), transparent 70%)`
+          ),
+        }}
+      />
       <div className="relative aspect-[4/5] overflow-hidden">
         {/* Nefes alma efekti */}
         <motion.div

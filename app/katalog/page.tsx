@@ -8,7 +8,12 @@ export const metadata: Metadata = {
   title: "Katalog | Çiçeksel",
 };
 
-export default async function KatalogPage() {
+export default async function KatalogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const products = await getProducts();
-  return <CatalogGrid products={products} />;
+  return <CatalogGrid products={products} initialQuery={q ?? ""} />;
 }

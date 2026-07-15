@@ -70,13 +70,13 @@ export default function Navbar() {
             <Phone className="h-3.5 w-3.5" />
             {SITE.phone}
           </a>
-          <button
-            type="button"
-            aria-label="Ara"
-            className="hidden h-9 w-9 items-center justify-center rounded-full text-[#33323a] transition-colors hover:text-[#d9594c] sm:flex"
+          <Link
+            href="/katalog"
+            aria-label="Çiçek ara"
+            className="hidden h-9 w-9 items-center justify-center rounded-full text-[#33323a] transition-colors hover:scale-110 hover:text-[#d9594c] sm:flex"
           >
             <Search className="h-4 w-4" />
-          </button>
+          </Link>
           <button
             type="button"
             onClick={openCart}

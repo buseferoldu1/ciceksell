@@ -55,6 +55,7 @@ export default function ModelShowcase({
                   <ModelViewer
                     src={product.model}
                     alt={product.name}
+                    poster={product.image}
                     className="h-full w-full"
                   />
                 )}
