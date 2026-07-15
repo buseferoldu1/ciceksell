@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Flower2, Menu, Phone, Search, ShoppingBag, X } from "lucide-react";
+import { Flower2, Menu, Phone, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { SITE } from "@/lib/site";
 
@@ -76,6 +76,13 @@ export default function Navbar() {
             className="hidden h-9 w-9 items-center justify-center rounded-full text-[#33323a] transition-colors hover:scale-110 hover:text-[#d9594c] sm:flex"
           >
             <Search className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/giris"
+            aria-label="Giriş yap"
+            className="hidden h-9 w-9 items-center justify-center rounded-full text-[#33323a] transition-colors hover:scale-110 hover:text-[#d9594c] sm:flex"
+          >
+            <User className="h-4 w-4" />
           </Link>
           <button
             type="button"

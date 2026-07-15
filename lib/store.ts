@@ -17,6 +17,7 @@ export const usingDatabase = Boolean(DATABASE_URL);
 const DATA_DIR = path.join(process.cwd(), "data");
 const PRODUCTS_FILE = path.join(DATA_DIR, "products.json");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
 
 export type OrderStatus =
   | "yeni"
@@ -30,6 +31,18 @@ export interface OrderItem {
   name: string;
   price: number;
   qty: number;
+}
+
+/** Sifre hash'i asla istemciye gonderilmez. */
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface UserRecord extends User {
+  passwordHash: string;
 }
 
 export interface Order {
@@ -85,6 +98,15 @@ async function ensureSchema() {
           total INTEGER NOT NULL
         )
       `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
       // Ilk kurulumda katalogu tohumla
       const [{ count }] = (await sql`SELECT COUNT(*)::int AS count FROM products`) as {
         count: number;
@@ -137,6 +159,11 @@ async function ensureFiles() {
     await fs.access(ORDERS_FILE);
   } catch {
     await fs.writeFile(ORDERS_FILE, "[]", "utf8");
+  }
+  try {
+    await fs.access(USERS_FILE);
+  } catch {
+    await fs.writeFile(USERS_FILE, "[]", "utf8");
   }
 }
 
@@ -298,6 +325,90 @@ export async function addOrder(
   orders.unshift(order);
   await writeFileOrders(orders);
   return order;
+}
+
+/* ----------------------------- Kullanicilar ------------------------------ */
+
+type UserRow = {
+  id: string;
+  email: string;
+  name: string;
+  password_hash: string;
+  created_at: string | Date;
+};
+
+function rowToUserRecord(r: UserRow): UserRecord {
+  return {
+    id: r.id,
+    email: r.email,
+    name: r.name,
+    passwordHash: r.password_hash,
+    createdAt: new Date(r.created_at).toISOString(),
+  };
+}
+
+/** Sifre hash'ini disari sizdirmamak icin herkese acik gorunum. */
+export function toPublicUser(u: UserRecord): User {
+  return { id: u.id, email: u.email, name: u.name, createdAt: u.createdAt };
+}
+
+async function readFileUsers(): Promise<UserRecord[]> {
+  await ensureFiles();
+  return JSON.parse(await fs.readFile(USERS_FILE, "utf8")) as UserRecord[];
+}
+
+export async function getUserByEmail(email: string): Promise<UserRecord | null> {
+  const key = email.trim().toLowerCase();
+  if (sql) {
+    await ensureSchema();
+    const rows = (await sql`
+      SELECT id, email, name, password_hash, created_at FROM users WHERE email = ${key}
+    `) as UserRow[];
+    return rows[0] ? rowToUserRecord(rows[0]) : null;
+  }
+  const list = await readFileUsers();
+  return list.find((u) => u.email === key) ?? null;
+}
+
+export async function getUserById(id: string): Promise<UserRecord | null> {
+  if (sql) {
+    await ensureSchema();
+    const rows = (await sql`
+      SELECT id, email, name, password_hash, created_at FROM users WHERE id = ${id}
+    `) as UserRow[];
+    return rows[0] ? rowToUserRecord(rows[0]) : null;
+  }
+  const list = await readFileUsers();
+  return list.find((u) => u.id === id) ?? null;
+}
+
+export async function createUser(data: {
+  email: string;
+  name: string;
+  passwordHash: string;
+}): Promise<UserRecord> {
+  const email = data.email.trim().toLowerCase();
+  const id = `u${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  if (sql) {
+    await ensureSchema();
+    const rows = (await sql`
+      INSERT INTO users (id, email, name, password_hash)
+      VALUES (${id}, ${email}, ${data.name}, ${data.passwordHash})
+      RETURNING id, email, name, password_hash, created_at
+    `) as UserRow[];
+    return rowToUserRecord(rows[0]);
+  }
+  const list = await readFileUsers();
+  const user: UserRecord = {
+    id,
+    email,
+    name: data.name,
+    passwordHash: data.passwordHash,
+    createdAt: new Date().toISOString(),
+  };
+  list.push(user);
+  await fs.writeFile(USERS_FILE, JSON.stringify(list, null, 2), "utf8");
+  return user;
 }
 
 export async function updateOrderStatus(

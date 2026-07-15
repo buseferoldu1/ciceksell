@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { formatPrice, type Product } from "@/lib/products";
+import AdminLogin from "@/components/ui/admin-login";
 import type { Order, OrderStatus } from "@/lib/store";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -210,52 +211,15 @@ export default function AdminPage() {
     if (res.ok) setProducts((prev) => prev.filter((x) => x.id !== p.id));
   };
 
-  // ---------- Giris ekrani ----------
+  // ---------- Giris ekrani (/giris ile ayni duzen) ----------
   if (!key) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f2ef] px-4">
-        <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          onSubmit={handleLogin}
-          className="w-full max-w-sm rounded-2xl border border-black/5 bg-white p-8 shadow-lg"
-        >
-          <div className="mb-6 flex items-center gap-2">
-            <Flower2 className="h-6 w-6 text-[#d9594c]" />
-            <h1 className="font-serif text-2xl font-bold text-[#33323a]">
-              Çiçeksel Yönetim
-            </h1>
-          </div>
-          <label className="mb-2 flex items-center gap-1.5 text-sm font-medium text-[#33323a]/70">
-            <Lock className="h-3.5 w-3.5" />
-            Yönetici Şifresi
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-black/10 px-4 py-3 text-sm outline-none focus:border-[#d9594c]"
-            placeholder="••••••••"
-            autoFocus
-          />
-          {loginError && (
-            <p className="mt-2 text-xs text-red-500">{loginError}</p>
-          )}
-          <button
-            type="submit"
-            className="mt-5 w-full rounded-full bg-[#d9594c] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#c2493d]"
-          >
-            Giriş Yap
-          </button>
-          <Link
-            href="/"
-            className="mt-4 flex items-center justify-center gap-1 text-xs text-[#33323a]/50 hover:text-[#d9594c]"
-          >
-            <ArrowLeft className="h-3 w-3" />
-            Siteye dön
-          </Link>
-        </motion.form>
-      </main>
+      <AdminLogin
+        password={password}
+        setPassword={setPassword}
+        onSubmit={handleLogin}
+        error={loginError}
+      />
     );
   }
 
