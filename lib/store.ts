@@ -230,7 +230,10 @@ export async function updateProduct(
         tag   = COALESCE(${patch.tag ?? null}, tag),
         price = COALESCE(${patch.price ?? null}, price),
         image = COALESCE(${patch.image ?? null}, image),
-        model = ${patch.model === undefined ? null : patch.model}
+        -- model YALNIZCA acikca gonderildiyse degistirilir. Onceden
+        -- gonderilmediginde NULL yaziliyordu: adini/fiyatini duzenledigin
+        -- her 3D urun modelini kaybediyordu.
+        model = CASE WHEN ${"model" in patch} THEN ${patch.model ?? null} ELSE model END
       WHERE id = ${id}
       RETURNING id, name, tag, price, image, model
     `) as ProductRow[];

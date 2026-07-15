@@ -50,6 +50,8 @@ export default function AdminPage() {
   const [key, setKey] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  // Durum/silme gibi islemlerde olusan hatalar (onceden sessizce yutuluyordu)
+  const [actionError, setActionError] = useState("");
   const [tab, setTab] = useState<"siparisler" | "urunler">("siparisler");
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -125,14 +127,43 @@ export default function AdminPage() {
   };
 
   const setOrderStatus = async (id: string, status: OrderStatus) => {
-    const res = await authedFetch(`/api/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
+    const previous = orders.find((o) => o.id === id)?.status;
+    setActionError("");
+    // Iyimser guncelleme: ekran aninda tepki verir
+    setOrders((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, status } : o))
+    );
+    try {
+      const res = await authedFetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        // Onceden hata sessizce yutuluyordu: istek basarisiz olunca ekran
+        // eski degere donuyor, kullanici NEDEN oldugunu goremiyordu.
+        if (res.status === 401) {
+          sessionStorage.removeItem("ciceksel-admin-key");
+          setKey(null);
+          // Panel kapandigi icin mesaji giris ekraninda goster
+          setLoginError("Oturum süresi doldu, tekrar giriş yapın");
+          throw new Error("Oturum süresi doldu, tekrar giriş yapın");
+        }
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? `Durum güncellenemedi (${res.status})`);
+      }
       const updated = await res.json();
       setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    } catch (err) {
+      // Basarisizsa eski duruma geri al
+      if (previous) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, status: previous } : o))
+        );
+      }
+      setActionError(
+        err instanceof Error ? err.message : "Durum güncellenemedi"
+      );
     }
   };
 
@@ -207,8 +238,21 @@ export default function AdminPage() {
 
   const removeProduct = async (p: Product) => {
     if (!window.confirm(`"${p.name}" ürünü silinsin mi?`)) return;
+    setActionError("");
     const res = await authedFetch(`/api/products/${p.id}`, { method: "DELETE" });
-    if (res.ok) setProducts((prev) => prev.filter((x) => x.id !== p.id));
+    if (res.ok) {
+      setProducts((prev) => prev.filter((x) => x.id !== p.id));
+      return;
+    }
+    // Hata artik sessizce yutulmuyor
+    if (res.status === 401) {
+      sessionStorage.removeItem("ciceksel-admin-key");
+      setKey(null);
+      setLoginError("Oturum süresi doldu, tekrar giriş yapın");
+      return;
+    }
+    const data = await res.json().catch(() => null);
+    setActionError(data?.error ?? `Ürün silinemedi (${res.status})`);
   };
 
   // ---------- Giris ekrani (/giris ile ayni duzen) ----------
@@ -281,6 +325,28 @@ export default function AdminPage() {
       </header>
 
       <div className="mx-auto max-w-6xl px-6 py-8">
+        {/* Islem hatalari artik gorunur (onceden sessizce yutuluyordu) */}
+        <AnimatePresence>
+          {actionError && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mb-5 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
+            >
+              <span className="text-sm text-red-700">{actionError}</span>
+              <button
+                type="button"
+                onClick={() => setActionError("")}
+                aria-label="Hatayı kapat"
+                className="text-red-400 transition-colors hover:text-red-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {loading && (
           <div className="flex justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-[#d9594c]" />
