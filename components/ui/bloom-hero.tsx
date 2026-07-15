@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 import { CATALOG, formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/components/cart/cart-context";
 import FallingPetals from "./falling-petals";
@@ -11,40 +12,49 @@ interface Slide {
   script: string;
   headlineTop: string;
   headlineBottom: string;
-  product: Product;
+  productId: string;
   // Vitrin gorseli urun fotografindan farkli olabilir (editoryel/sanatsal)
   heroImage?: string;
 }
 
-const SLIDES: Slide[] = [
+const SLIDE_DEFS: Slide[] = [
   {
     script: "Düğün",
     headlineTop: "Beyazın",
     headlineBottom: "Zarafeti",
-    product: CATALOG.katalog[29], // 21li Beyaz Lale Lüx
+    productId: "k30", // 21li Beyaz Lale Lüx
     heroImage: "/flowers/beyaz-zarafet.jpg",
   },
   {
     script: "Romantizm",
     headlineTop: "Zamansız",
     headlineBottom: "Aşk",
-    product: CATALOG.katalog[7], // Kutulu 101 Gül
+    productId: "k8", // Kutulu 101 Gül
   },
   {
     script: "Başsağlığı",
     headlineTop: "Sükûnet",
     headlineBottom: "Bahçesi",
-    product: CATALOG.katalog[20], // Kazablanka Mix Lüks
+    productId: "k21", // Kazablanka Mix Lüks
     heroImage: "/flowers/sukunet.jpg",
   },
 ];
 
-export default function BloomHero() {
+export default function BloomHero({ products }: { products?: Product[] }) {
   const [index, setIndex] = useState(0);
   const { addItem } = useCart();
-  const slide = SLIDES[index];
 
-  const go = (i: number) => setIndex((i + SLIDES.length) % SLIDES.length);
+  // Admin panelinden urunler degisebilir: id ile bul, yoksa siradan sec
+  const source = products && products.length > 0 ? products : CATALOG.katalog;
+  const slides = SLIDE_DEFS.map((def, i) => ({
+    ...def,
+    product:
+      source.find((p) => p.id === def.productId) ??
+      source[Math.min(i, source.length - 1)],
+  })).filter((s) => s.product);
+  const slide = slides[index % slides.length];
+
+  const go = (i: number) => setIndex((i + slides.length) % slides.length);
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#f4f2ef]">
@@ -79,7 +89,7 @@ export default function BloomHero() {
                 aynı gün teslimatla ulaştırın.
               </p>
 
-              <div className="mt-10 flex items-center gap-6">
+              <div className="mt-10 flex flex-wrap items-center gap-4">
                 <span className="font-serif text-3xl font-bold text-[#d9594c]">
                   {formatPrice(slide.product.price)}
                 </span>
@@ -93,6 +103,15 @@ export default function BloomHero() {
                   <ShoppingBag className="h-4 w-4" />
                   Sepete Ekle
                 </motion.button>
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                  <Link
+                    href="/katalog"
+                    className="flex items-center gap-2 rounded-full border-2 border-[#33323a]/15 px-7 py-3 text-sm font-semibold text-[#33323a] transition-colors hover:border-[#d9594c] hover:text-[#d9594c]"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Kataloğu Keşfet
+                  </Link>
+                </motion.div>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -128,7 +147,7 @@ export default function BloomHero() {
       <div className="absolute inset-x-0 bottom-0 z-10">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 pb-8 lg:px-10">
           <div className="flex flex-1 gap-3 overflow-x-auto">
-            {SLIDES.map((s, i) => (
+            {slides.map((s, i) => (
               <button
                 key={s.product.id}
                 type="button"

@@ -86,16 +86,43 @@ export default function OdemePage() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     setStatus("processing");
     // DEMO: gercek odeme saglayicisi (iyzico/Stripe) buraya baglanir.
-    setTimeout(() => {
-      setOrderNo(`CB-${Date.now().toString().slice(-8)}`);
+    // Siparis, admin panelinde gorunmesi icin API'ye kaydedilir.
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer: {
+            name: form.name,
+            phone: form.phone,
+            address: form.address,
+            note: form.note || undefined,
+          },
+          items: items.map((i) => ({
+            id: i.id,
+            name: i.name,
+            price: i.price,
+            qty: i.qty,
+          })),
+        }),
+      });
+      const order = await res.json();
+      if (!res.ok) throw new Error(order?.error || "Sipariş kaydedilemedi");
+      setOrderNo(order.id);
       setStatus("success");
       clear();
-    }, 2000);
+    } catch {
+      setStatus("form");
+      setErrors((prev) => ({
+        ...prev,
+        cvc: "Sipariş kaydedilemedi, tekrar deneyin",
+      }));
+    }
   };
 
   const inputCls = (err?: string) =>

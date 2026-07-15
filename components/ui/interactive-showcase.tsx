@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   AnimatePresence,
   motion,
@@ -9,7 +10,6 @@ import {
   useTransform,
 } from "framer-motion";
 import { ChevronLeft, ChevronRight, ShoppingBag, Sparkles } from "lucide-react";
-import FlowerCatalog from "./flower-catalog";
 import ModelViewer from "./model-viewer";
 import { useCart } from "@/components/cart/cart-context";
 import type { CategoryKey } from "@/lib/products";
@@ -89,7 +89,6 @@ const textVariants = {
 
 export default function InteractiveShowcase() {
   const [index, setIndex] = useState(0);
-  const [catalogOpen, setCatalogOpen] = useState(false);
   const { count, openCart } = useCart();
   const flower = FLOWERS[index];
 
@@ -191,7 +190,7 @@ export default function InteractiveShowcase() {
             />
           </motion.div>
 
-          <div className="relative z-10 flex h-[76%] max-h-[600px] w-full items-center justify-center">
+          <div className="relative z-10 flex h-[380px] w-full items-center justify-center lg:h-[76%] lg:max-h-[600px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`model-${flower.id}`}
@@ -289,13 +288,12 @@ export default function InteractiveShowcase() {
               </motion.div>
             </AnimatePresence>
 
-            <button
-              type="button"
-              onClick={() => setCatalogOpen(true)}
+            <Link
+              href="/katalog"
               className="mt-8 rounded-full border border-[#f6b6be]/50 px-7 py-3 text-xs font-semibold uppercase tracking-widest text-[#f6b6be] transition-colors hover:bg-[#f6b6be] hover:text-[#131314]"
             >
               Detayları İncele
-            </button>
+            </Link>
           </div>
 
           <div className="flex justify-end gap-3">
@@ -315,17 +313,19 @@ export default function InteractiveShowcase() {
 
       {/* Alt orta: katalog butonu + gecis noktalari */}
       <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-4">
-        <motion.button
-          type="button"
-          onClick={() => setCatalogOpen(true)}
+        <motion.div
           whileHover={{ scale: 1.06, y: -2 }}
           whileTap={{ scale: 0.96 }}
           transition={{ type: "spring", stiffness: 300, damping: 18 }}
-          className="flex items-center gap-2 rounded-full bg-[#f6b6be] px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#131314] shadow-lg shadow-[#f6b6be]/20 transition-colors hover:bg-[#f9cdd3]"
         >
-          <Sparkles className="h-4 w-4" />
-          Kataloğu Keşfet
-        </motion.button>
+          <Link
+            href="/katalog"
+            className="flex items-center gap-2 rounded-full bg-[#f6b6be] px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#131314] shadow-lg shadow-[#f6b6be]/20 transition-colors hover:bg-[#f9cdd3]"
+          >
+            <Sparkles className="h-4 w-4" />
+            Kataloğu Keşfet
+          </Link>
+        </motion.div>
 
         <div className="flex gap-3">
           {FLOWERS.map((f, i) => (
@@ -342,15 +342,6 @@ export default function InteractiveShowcase() {
         </div>
       </div>
 
-      {/* Katalog overlay */}
-      <AnimatePresence>
-        {catalogOpen && (
-          <FlowerCatalog
-            initialCategory={flower.key}
-            onClose={() => setCatalogOpen(false)}
-          />
-        )}
-      </AnimatePresence>
     </section>
   );
 }

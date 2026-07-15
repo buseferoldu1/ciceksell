@@ -2,12 +2,20 @@
 
 import { motion } from "framer-motion";
 import { Rotate3d, ShoppingBag } from "lucide-react";
-import { MODELS_3D, formatPrice } from "@/lib/products";
+import { MODELS_3D, formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/components/cart/cart-context";
 import ModelViewer from "./model-viewer";
 
-export default function ModelShowcase() {
+export default function ModelShowcase({
+  products,
+}: {
+  products?: Product[];
+}) {
   const { addItem } = useCart();
+  const modelProducts = (products && products.length > 0 ? products : MODELS_3D).filter(
+    (p) => p.model
+  );
+  if (modelProducts.length === 0) return null;
 
   return (
     <section id="uc-boyut" className="bg-[#f4f2ef] px-4 py-24 sm:px-6 lg:px-8">
@@ -33,7 +41,7 @@ export default function ModelShowcase() {
         </motion.div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {MODELS_3D.map((product, index) => (
+          {modelProducts.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 24 }}

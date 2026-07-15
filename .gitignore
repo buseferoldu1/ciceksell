@@ -14,6 +14,11 @@ dist-ssr
 .next
 next-env.d.ts
 
+# Calisma zamani verisi (admin panelinden yonetilir; ilk calistirmada
+# lib/products.ts icindeki katalogdan otomatik olusturulur)
+data/
+public/uploads/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

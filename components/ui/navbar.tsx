@@ -7,10 +7,10 @@ import { Flower2, Menu, Phone, Search, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 
 const NAV_LINKS = [
-  { href: "/vitrin", label: "Çiçekler" },
-  { href: "#ozellikler", label: "Özel Günler" },
-  { href: "#yorumlar", label: "Hakkımızda" },
-  { href: "#sss", label: "İletişim" },
+  { href: "/katalog", label: "Katalog" },
+  { href: "/vitrin", label: "Atölye (3D)" },
+  { href: "/#yorumlar", label: "Hakkımızda" },
+  { href: "/#sss", label: "İletişim" },
 ];
 
 export default function Navbar() {

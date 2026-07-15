@@ -6,14 +6,22 @@ import SocialProof from "@/components/ui/social-proof";
 import Pricing from "@/components/ui/pricing";
 import Faq from "@/components/ui/faq";
 import Footer from "@/components/ui/footer";
+import { getProducts } from "@/lib/store";
 
-export default function Home() {
+// Urunler admin panelinden yonetildigi icin sayfa her istekte
+// guncel veriyi okur.
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const products = await getProducts();
+  const modelProducts = products.filter((p) => p.model);
+
   return (
     <main>
       <Navbar />
-      <BloomHero />
+      <BloomHero products={products} />
       <Features />
-      <ModelShowcase />
+      <ModelShowcase products={modelProducts} />
       <SocialProof />
       <Pricing />
       <Faq />

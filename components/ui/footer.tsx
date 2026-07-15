@@ -81,8 +81,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-8 text-center text-sm text-white/45">
-          © {new Date().getFullYear()} Çiçeksel. Tüm hakları saklıdır.
+        <div className="mt-12 flex flex-col items-center gap-2 border-t border-white/10 pt-8 text-center text-sm text-white/45">
+          <span>© {new Date().getFullYear()} Çiçeksel. Tüm hakları saklıdır.</span>
+          <a href="/admin" className="text-xs text-white/30 transition-colors hover:text-white/60">
+            Yönetici Girişi
+          </a>
         </div>
       </div>
     </footer>
