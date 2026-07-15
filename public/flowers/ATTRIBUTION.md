@@ -39,3 +39,11 @@ fotograflarinizla degistirin.
 |---|---|
 | beyaz-zarafet.jpg | https://pin.it/295ajU541 (i.pinimg.com/.../01dd4f...) |
 | sukunet.jpg | https://pin.it/2rwGNiQpX (i.pinimg.com/.../3ce120...) |
+
+## ciceksel.com kaynakli katalog (kullanici talebi)
+
+public/flowers/katalog/ altindaki 39 urun gorseli ile urun adlari,
+aciklamalari ve fiyatlari, kullanicinin talebi uzerine
+https://ciceksel.com katalogundan aktarilmistir (Tem 2026).
+Site kullaniciya ait degilse bu gorseller ve metinler yayinlanmadan
+once hak sahibinden izin alinmalidir.

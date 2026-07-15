@@ -33,7 +33,7 @@ interface Flower {
 const FLOWERS: Flower[] = [
   {
     id: 1,
-    key: "guller",
+    key: "katalog",
     category: "Atölye Serisi",
     name: "Gül",
     description:
@@ -48,7 +48,7 @@ const FLOWERS: Flower[] = [
   },
   {
     id: 2,
-    key: "orkideler",
+    key: "katalog",
     category: "Atölye Serisi",
     name: "Orkide",
     description:
@@ -63,7 +63,7 @@ const FLOWERS: Flower[] = [
   },
   {
     id: 3,
-    key: "ortancalar",
+    key: "katalog",
     category: "Atölye Serisi",
     name: "Ortanca",
     description:

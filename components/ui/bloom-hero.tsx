@@ -21,20 +21,20 @@ const SLIDES: Slide[] = [
     script: "Düğün",
     headlineTop: "Beyazın",
     headlineBottom: "Zarafeti",
-    product: CATALOG.guller[1], // Beyaz Masal
+    product: CATALOG.katalog[29], // 21li Beyaz Lale Lüx
     heroImage: "/flowers/beyaz-zarafet.jpg",
   },
   {
     script: "Romantizm",
     headlineTop: "Zamansız",
     headlineBottom: "Aşk",
-    product: CATALOG.guller[3], // Kızıl Tutku
+    product: CATALOG.katalog[7], // Kutulu 101 Gül
   },
   {
     script: "Başsağlığı",
     headlineTop: "Sükûnet",
     headlineBottom: "Bahçesi",
-    product: CATALOG.ortancalar[1], // Lila Bahçe
+    product: CATALOG.katalog[20], // Kazablanka Mix Lüks
     heroImage: "/flowers/sukunet.jpg",
   },
 ];
