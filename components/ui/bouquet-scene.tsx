@@ -32,18 +32,67 @@ import { FLOWER_OPTIONS, WRAP_OPTIONS } from "@/lib/bouquet";
 
 const MAX_GORUNUR = 28;
 
-/** Tum cicekler ayni buyuklukte gorunsun diye sabit hedef yukseklik */
-const CICEK_YUKSEKLIK = 0.56;
+/**
+ * Yerlesim/olcek hesaplarinda (yayilma yaricapi, sarma boyutu, egim
+ * tavani) kullanilan referans cicek yuksekligi — tipik bir gul boyu.
+ */
+const CICEK_REFERANS_YUKSEKLIK = 0.5;
 
-/** Modeli hedef yukseklige olceklendirip merkezler */
-function normalize(obj: THREE.Object3D, hedefYukseklik: number) {
+/**
+ * normalizeCicek icindeki hacimsel (kupkok) olcegin hedefi. Bu deger
+ * CICEK_REFERANS_YUKSEKLIK ile AYNI ANLAMA gelmez: kupkok olcek, max
+ * boyuta gore olcekten kucuk cikar, o yuzden benzer nihai yukseklige
+ * ulasmak icin daha kucuk bir sayi kullanilir (bkz. normalizeCicek).
+ */
+const CICEK_HACIM_HEDEFI = 0.218;
+
+/**
+ * Bazi kaynak modeller kendi ekseninde yatik/donuk geldigi icin (orn.
+ * sakayik modeli asil uzun ekseni Z boyunca) buket icinde dik durmalari
+ * icin duzeltme rotasyonu uygulanir.
+ */
+const MODEL_DUZELTME: Record<string, [number, number, number]> = {
+  "/models/buket/sakayik.glb": [-Math.PI / 2, 0, 0],
+};
+
+/** Konteyner (vazo/kutu) icin: sadece Y yuksekligine gore olceklendirip merkezler */
+function normalizeYukseklik(obj: THREE.Object3D, hedefYukseklik: number) {
   const box = new THREE.Box3().setFromObject(obj);
   const size = new THREE.Vector3();
   box.getSize(size);
   const olcek = size.y > 0 ? hedefYukseklik / size.y : 1;
   obj.scale.setScalar(olcek);
 
-  // Tabani orijine otur
+  const box2 = new THREE.Box3().setFromObject(obj);
+  const merkez = new THREE.Vector3();
+  box2.getCenter(merkez);
+  obj.position.x -= merkez.x;
+  obj.position.z -= merkez.z;
+  obj.position.y -= box2.min.y;
+  return obj;
+}
+
+/**
+ * Cicekler icin: once (gerekirse) dogrultma rotasyonu uygulanir, sonra
+ * HACIMSEL boyuta (x*y*z kupkoku) gore olceklendirilir. Kaynak modeller
+ * (Sketchfab) birbirinden tamamen farkli, keyfi birim olceklerinde
+ * geldigi icin sadece Y yuksekligine ya da tek bir en buyuk boyuta gore
+ * olceklemek, yuvarlak/genis modellerin (orn. acilmis gul, ortanca)
+ * digerlerinden hala belirgin buyuk gorunmesine yol aciyordu. Kupkok
+ * (geometrik ortalama) olcegi, modelin sekli ne olursa olsun ayni
+ * "hacimsel" izlenimi verecek sekilde her turu ayni hedefe getirir.
+ */
+function normalizeCicek(obj: THREE.Object3D, hedefBoyut: number, url: string) {
+  const duzeltme = MODEL_DUZELTME[url];
+  if (duzeltme) obj.rotation.set(...duzeltme);
+
+  const box = new THREE.Box3().setFromObject(obj);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const hacimselBoyut = Math.cbrt(Math.max(size.x, 1e-6) * Math.max(size.y, 1e-6) * Math.max(size.z, 1e-6));
+  const olcek = hacimselBoyut > 0 ? hedefBoyut / hacimselBoyut : 1;
+  obj.scale.setScalar(olcek);
+
   const box2 = new THREE.Box3().setFromObject(obj);
   const merkez = new THREE.Vector3();
   box2.getCenter(merkez);
@@ -67,9 +116,9 @@ function Cicek({
   const { scene } = useGLTF(url);
   const klon = useMemo(() => {
     const c = scene.clone(true);
-    normalize(c, CICEK_YUKSEKLIK);
+    normalizeCicek(c, CICEK_HACIM_HEDEFI, url);
     return c;
-  }, [scene]);
+  }, [scene, url]);
 
   return (
     <group position={position} rotation={[tilt, rotationY, 0]}>
@@ -82,7 +131,7 @@ function Kap({ url, hedefYukseklik }: { url: string; hedefYukseklik: number }) {
   const { scene } = useGLTF(url);
   const klon = useMemo(() => {
     const c = scene.clone(true);
-    normalize(c, hedefYukseklik);
+    normalizeYukseklik(c, hedefYukseklik);
     return c;
   }, [scene, hedefYukseklik]);
   return <primitive object={klon} />;
@@ -142,7 +191,7 @@ function yerlesimAyarlari(kapId: string) {
       // Vazonun agzinin hemen altindan baslar; sap ucu vazo icinde gizli
       // kalir, tomurcuklar agizdan yukari tasar. Vazonun dar agzindan
       // tasmasin diye yaricap sikica sinirlanir.
-      return { pivotY: 0.5, tiltBase: 0.26, jitter: 0.02, maxRadius: 0.16 };
+      return { pivotY: 0.32, tiltBase: 0.26, jitter: 0.02, maxRadius: 0.115 };
     case "kutu":
       // Kutunun agzinin hemen altindan baslar; kutunun kenarindan tasmasin
       return { pivotY: 0.24, tiltBase: 0.22, jitter: 0.018, maxRadius: 0.17 };
@@ -215,13 +264,13 @@ function Sahne({
 
   // Dal sayisina gore yayilma olcegi + konteynerin agzina gore mutlak tavan
   const olcek = sayiOlcegi(toplamDal);
-  const efektifTiltMax = Math.min(tiltBase * olcek, Math.atan2(maxRadius, CICEK_YUKSEKLIK * 0.9));
+  const efektifTiltMax = Math.min(tiltBase * olcek, Math.atan2(maxRadius, CICEK_REFERANS_YUKSEKLIK * 0.9));
 
   // Kraft/luks sarma boyutu, gercek yayilmaya gore dinamik hesaplanir ki
   // az dalda gereksiz genis durmasin
-  const yayilmaYaricap = CICEK_YUKSEKLIK * Math.sin(efektifTiltMax);
+  const yayilmaYaricap = CICEK_REFERANS_YUKSEKLIK * Math.sin(efektifTiltMax);
   const sarmaUstYaricap = Math.max(0.13, yayilmaYaricap + 0.055);
-  const sarmaYukseklik = Math.max(0.22, pivotY + CICEK_YUKSEKLIK * 0.42);
+  const sarmaYukseklik = Math.max(0.22, pivotY + CICEK_REFERANS_YUKSEKLIK * 0.42);
 
   return (
     <>
@@ -231,7 +280,7 @@ function Sahne({
 
       <group ref={grupRef}>
         {/* Kap */}
-        {vazoda && <Kap url="/models/buket/vazo.glb" hedefYukseklik={0.7} />}
+        {vazoda && <Kap url="/models/buket/vazo.glb" hedefYukseklik={0.46} />}
         {kutuda && <Kap url="/models/buket/hediye-kutusu.glb" hedefYukseklik={0.4} />}
         {!vazoda && !kutuda && (
           <KagitSarma
@@ -309,7 +358,7 @@ export default function BouquetScene({
     <div ref={ref} className={className}>
       {gorunur && (
         <Canvas
-          camera={{ position: [0, 0.85, 1.75], fov: 37 }}
+          camera={{ position: [0, 0.7, 1.6], fov: 37 }}
           dpr={[1, 1.8]}
           gl={{ antialias: true, alpha: true }}
         >
@@ -321,7 +370,7 @@ export default function BouquetScene({
             enableZoom={false}
             minPolarAngle={Math.PI / 5}
             maxPolarAngle={Math.PI / 1.9}
-            target={[0, 0.5, 0]}
+            target={[0, 0.4, 0]}
           />
         </Canvas>
       )}
