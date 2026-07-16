@@ -11,6 +11,8 @@
   "dependencies": {
     "@google/model-viewer": "^4.3.1",
     "@neondatabase/serverless": "^1.1.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@vercel/blob": "^2.6.1",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.42.2",
@@ -18,7 +20,8 @@
     "lucide-react": "^1.24.0",
     "next": "^16.2.10",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",

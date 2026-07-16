@@ -17,6 +17,8 @@ export interface FlowerOption {
   note: string;
   /** Onizlemede kullanilan temsili renk */
   color: string;
+  /** 3D onizlemedeki GLB modeli (public/ altinda) */
+  model: string;
 }
 
 export interface WrapOption {
@@ -34,6 +36,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/11-li-kirmizi-gul.jpg",
     note: "Tutku ve aşkın klasiği",
     color: "#c0223a",
+    model: "/models/buket/gul-kirmizi.glb",
   },
   {
     id: "pembe-gul",
@@ -42,6 +45,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/11li-pembe-acik-gul.jpg",
     note: "Zarafet ve incelik",
     color: "#e88aa6",
+    model: "/models/buket/gul-pembe.glb",
   },
   {
     id: "beyaz-gul",
@@ -50,6 +54,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/gul-2.jpg",
     note: "Saflık ve yeni başlangıçlar",
     color: "#f4f1ea",
+    model: "/models/buket/gul-beyaz.glb",
   },
   {
     id: "lale",
@@ -58,6 +63,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/21-lale-mix-premium.jpg",
     note: "Bahar neşesi",
     color: "#e4572e",
+    model: "/models/buket/lale.glb",
   },
   {
     id: "sakayik",
@@ -66,6 +72,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/sakayik-mix.jpg",
     note: "Bolluk ve romantizm",
     color: "#f2a1b7",
+    model: "/models/buket/sakayik.glb",
   },
   {
     id: "ortanca",
@@ -74,6 +81,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/ortanca-mix.jpg",
     note: "Bulut gibi dolgun",
     color: "#8fa8d8",
+    model: "/models/buket/ortanca.glb",
   },
   {
     id: "kazablanka",
@@ -82,6 +90,8 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/kazablanka-mix.jpg",
     note: "Yoğun kokulu lilyum",
     color: "#f7f3e8",
+    // Kazablanka icin ayri model yok; beyaz gul modeli temsili kullaniliyor
+    model: "/models/buket/gul-beyaz.glb",
   },
   {
     id: "orkide",
@@ -90,6 +100,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/orkide-1.jpg",
     note: "Uzun ömürlü ve gösterişli",
     color: "#d8b4e2",
+    model: "/models/buket/orkide.glb",
   },
 ];
 

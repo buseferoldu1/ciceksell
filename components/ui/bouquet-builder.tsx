@@ -1,8 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Flower2, Minus, Plus, RotateCcw, ShoppingBag, Sparkles } from "lucide-react";
+
+// 3D sahne yalnizca tarayicida yuklenir (three.js SSR'da calismaz)
+const BouquetScene = dynamic(() => import("@/components/ui/bouquet-scene"), {
+  ssr: false,
+});
 import {
   FLOWER_OPTIONS,
   MIN_STEMS,
@@ -72,16 +78,7 @@ export default function BouquetBuilder() {
     }, 400);
   };
 
-  // Onizleme: secilen her dal icin bir yaprak/nokta
-  const onizleme = useMemo(() => {
-    const noktalar: { color: string; key: string }[] = [];
-    Object.entries(stems).forEach(([id, n]) => {
-      const f = FLOWER_OPTIONS.find((x) => x.id === id);
-      if (!f) return;
-      for (let i = 0; i < n; i++) noktalar.push({ color: f.color, key: `${id}-${i}` });
-    });
-    return noktalar.slice(0, 60);
-  }, [stems]);
+  const bosMu = t.stemCount === 0;
 
   return (
     <section id="buket-olustur" className="px-4 py-24 sm:px-6 lg:px-8">
@@ -225,39 +222,24 @@ export default function BouquetBuilder() {
                 Buketiniz
               </h3>
 
-              {/* Onizleme */}
-              <div className="relative mb-5 flex h-40 items-end justify-center overflow-hidden rounded-xl bg-gradient-to-b from-white/[0.05] to-transparent">
-                {onizleme.length === 0 ? (
+              {/* Canli 3D onizleme */}
+              <div className="relative mb-5 h-56 overflow-hidden rounded-xl bg-gradient-to-b from-white/[0.06] to-transparent">
+                {bosMu ? (
                   <div className="flex h-full flex-col items-center justify-center gap-2 text-[#e5e2e3]/25">
                     <Flower2 className="h-8 w-8" />
-                    <span className="text-xs">Çiçek ekleyin</span>
+                    <span className="text-xs">Çiçek ekleyin, 3D önizleyin</span>
                   </div>
                 ) : (
-                  <div className="flex h-full w-full flex-wrap content-center items-center justify-center gap-1 p-4">
-                    <AnimatePresence>
-                      {onizleme.map((n, i) => (
-                        <motion.span
-                          key={n.key}
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0, opacity: 0 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 18,
-                            delay: Math.min(i * 0.012, 0.4),
-                          }}
-                          className="h-4 w-4 rounded-[50%_50%_50%_50%/60%_60%_40%_40%] shadow-sm"
-                          style={{ background: n.color }}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                )}
-                {t.stemCount > 60 && (
-                  <span className="absolute bottom-2 right-2 text-[10px] text-[#e5e2e3]/40">
-                    +{t.stemCount - 60} dal daha
-                  </span>
+                  <>
+                    <BouquetScene
+                      stems={stems}
+                      wrapId={wrapId}
+                      className="absolute inset-0 h-full w-full"
+                    />
+                    <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/60">
+                      Sürükleyip döndürün
+                    </span>
+                  </>
                 )}
               </div>
 
