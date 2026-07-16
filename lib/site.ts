@@ -32,9 +32,9 @@ export const SITE = {
  * gonderilmesini onlemek icin). IBAN alinca burayi doldurmak yeterli.
  */
 export const BANK = {
-  holder: "", // Hesap sahibi (orn. "Etem Çiçekçilik" veya sahibin adi)
-  iban: "", // "TR.." ile baslayan 26 haneli IBAN
-  bankName: "", // Banka adi (orn. "Ziraat Bankası")
+  holder: "Etem Perçin",
+  iban: "TR41 0001 0011 3327 9183 4050 18",
+  bankName: "Ziraat Bankası",
 } as const;
 
 export const BANKA_AKTIF = BANK.iban.trim().length > 0;
