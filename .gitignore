@@ -37,3 +37,6 @@ public/uploads/
 # Ortam degiskenleri
 .env*.local
 .env
+
+.vercel
+.env*
