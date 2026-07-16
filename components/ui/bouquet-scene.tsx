@@ -33,16 +33,29 @@ import { FLOWER_OPTIONS, WRAP_OPTIONS } from "@/lib/bouquet";
 const MAX_GORUNUR = 28;
 
 /**
+ * Her cicegin TOPLAM boyu (sentetik sap + tomurcuk) bu degere sabitlenir.
+ * Boylece tum dallar tam olarak ayni uzunlukta olur ve hepsi ayni
+ * seviyede/yerde biter — gercek bir ciceginin tomurcugu kucukse daha
+ * uzun, buyukse daha kisa bir sap eklenerek toplam boy esitlenir.
  * Yerlesim/olcek hesaplarinda (yayilma yaricapi, sarma boyutu, egim
- * tavani) kullanilan referans cicek yuksekligi — tipik bir gul boyu.
+ * tavani) da bu deger referans alinir.
  */
-const CICEK_REFERANS_YUKSEKLIK = 0.5;
+const CICEK_TOPLAM_BOY = 0.5;
+
+/** Tomurcuk cok buyukse bile en az bu kadar sap gorunsun */
+const SAP_MIN_UZUNLUK = 0.1;
+
+/** Sentetik sap kalinligi (alt/ust yaricap) */
+const SAP_ALT_YARICAP = 0.008;
+const SAP_UST_YARICAP = 0.006;
 
 /**
  * normalizeCicek icindeki hacimsel (kupkok) olcegin hedefi. Bu deger
- * CICEK_REFERANS_YUKSEKLIK ile AYNI ANLAMA gelmez: kupkok olcek, max
- * boyuta gore olcekten kucuk cikar, o yuzden benzer nihai yukseklige
- * ulasmak icin daha kucuk bir sayi kullanilir (bkz. normalizeCicek).
+ * CICEK_TOPLAM_BOY ile AYNI ANLAMA gelmez: kupkok olcek, max boyuta gore
+ * olcekten kucuk cikar, o yuzden benzer nihai yukseklige ulasmak icin
+ * daha kucuk bir sayi kullanilir (bkz. normalizeCicek). Tomurcuk daha
+ * sonra gerekirse CICEK_TOPLAM_BOY - SAP_MIN_UZUNLUK'a sigacak sekilde
+ * ek olarak kucultulur (bkz. Cicek bileseni).
  */
 const CICEK_HACIM_HEDEFI = 0.218;
 
@@ -114,14 +127,34 @@ function Cicek({
   tilt: number;
 }) {
   const { scene } = useGLTF(url);
-  const klon = useMemo(() => {
+  const { klon, sapBoyu } = useMemo(() => {
     const c = scene.clone(true);
     normalizeCicek(c, CICEK_HACIM_HEDEFI, url);
-    return c;
+
+    // Tomurcugun kendi yuksekligini olc; gerekirse (cok buyukse) sap icin
+    // yer acacak sekilde ek olarak kucult, ki toplam boy hep sabit kalsin.
+    const maxTomurcuk = CICEK_TOPLAM_BOY - SAP_MIN_UZUNLUK;
+    let box = new THREE.Box3().setFromObject(c);
+    let tomurcukYuksekligi = box.max.y - box.min.y;
+    if (tomurcukYuksekligi > maxTomurcuk && tomurcukYuksekligi > 0) {
+      c.scale.multiplyScalar(maxTomurcuk / tomurcukYuksekligi);
+      box = new THREE.Box3().setFromObject(c);
+      tomurcukYuksekligi = box.max.y - box.min.y;
+    }
+
+    // Kalan boy sentetik sap olur: tomurcuk kucukse sap uzun, buyukse
+    // kisa (ama hep en az SAP_MIN_UZUNLUK) -> toplam boy her zaman esit.
+    const sap = Math.max(SAP_MIN_UZUNLUK, CICEK_TOPLAM_BOY - tomurcukYuksekligi);
+    c.position.y += sap;
+    return { klon: c, sapBoyu: sap };
   }, [scene, url]);
 
   return (
     <group position={position} rotation={[tilt, rotationY, 0]}>
+      <mesh position={[0, sapBoyu / 2, 0]}>
+        <cylinderGeometry args={[SAP_UST_YARICAP, SAP_ALT_YARICAP, sapBoyu, 6]} />
+        <meshStandardMaterial color="#5a7d4f" roughness={0.75} />
+      </mesh>
       <primitive object={klon} />
     </group>
   );
@@ -140,19 +173,27 @@ function Kap({ url, hedefYukseklik }: { url: string; hedefYukseklik: number }) {
 /**
  * Kirisik/kagit gorunumlu buket sarma yuzeyi: tabanda (bagli nokta) tek
  * noktaya kapanan, yukari dogru dallarin yayilimina uyarak acilan, ust
- * kenari duzensiz/yirtik bir koni. Gercek bir koni gibi degil, elde
- * sarilmis kagit gibi durmasi icin kenarlar ve yaricap acisal olarak
- * dalgalandirilir.
+ * kenari duzensiz/yirtik bir koni. Duz (flat) golgeleme ile birlikte
+ * kullanildiginda her dilim ayri bir kirisik yuzey gibi isik alir; bu da
+ * pürüzsüz bir plastik koniden ziyade elde sarilmis kagit izlenimi verir.
  */
-function kagitSarmaGeometry(yukseklik: number, ustYaricap: number, segman = 48) {
+function kagitSarmaGeometry(yukseklik: number, ustYaricap: number, segman = 64) {
   const geo = new THREE.BufferGeometry();
   const pozisyonlar: number[] = [0, 0, 0]; // 0: bagli nokta (taban)
 
   for (let i = 0; i <= segman; i++) {
     const aci = (i / segman) * Math.PI * 2;
-    const kirisik = 1 + 0.07 * Math.sin(aci * 7 + 0.6) + 0.035 * Math.sin(aci * 13 + 1.4);
+    const kirisik =
+      1 +
+      0.11 * Math.sin(aci * 6 + 0.4) +
+      0.06 * Math.sin(aci * 11 + 1.7) +
+      0.035 * Math.sin(aci * 19 + 0.9);
     const r = ustYaricap * kirisik;
-    const yirtik = yukseklik + 0.045 * Math.sin(aci * 5 + 1.1) + 0.02 * Math.sin(aci * 11);
+    const yirtik =
+      yukseklik +
+      0.06 * Math.sin(aci * 5 + 1.1) +
+      0.03 * Math.sin(aci * 9 + 2.3) +
+      0.018 * Math.sin(aci * 17);
     pozisyonlar.push(Math.cos(aci) * r, yirtik, Math.sin(aci) * r);
   }
 
@@ -170,15 +211,60 @@ function kagitSarmaGeometry(yukseklik: number, ustYaricap: number, segman = 48) 
   return geo;
 }
 
+/** Kraft/luks kagidin lif dokusunu taklit eden basit prosedurel doku (bir kez uretilir) */
+let _kagitDokusu: THREE.CanvasTexture | null | undefined;
+function kagitDokusuAl(): THREE.CanvasTexture | null {
+  if (_kagitDokusu !== undefined) return _kagitDokusu;
+  if (typeof document === "undefined") {
+    _kagitDokusu = null;
+    return null;
+  }
+  const boyut = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = boyut;
+  canvas.height = boyut;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    _kagitDokusu = null;
+    return null;
+  }
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, boyut, boyut);
+  for (let i = 0; i < 1100; i++) {
+    const x = Math.random() * boyut;
+    const y = Math.random() * boyut;
+    const ton = 175 + Math.random() * 70;
+    ctx.fillStyle = `rgba(${ton},${ton},${ton},0.4)`;
+    ctx.fillRect(x, y, 1.3, 1.3);
+  }
+  ctx.strokeStyle = "rgba(110,110,110,0.14)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 46; i++) {
+    const x = Math.random() * boyut;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + (Math.random() - 0.5) * 24, boyut);
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(3, 2);
+  _kagitDokusu = tex;
+  return tex;
+}
+
 function KagitSarma({ renk, yukseklik, ustYaricap }: { renk: string; yukseklik: number; ustYaricap: number }) {
   const geo = useMemo(() => kagitSarmaGeometry(yukseklik, ustYaricap), [yukseklik, ustYaricap]);
+  const doku = useMemo(() => kagitDokusuAl(), []);
   return (
     <mesh geometry={geo}>
       <meshStandardMaterial
         color={renk}
+        map={doku ?? undefined}
         side={THREE.DoubleSide}
-        roughness={0.85}
-        metalness={0.02}
+        roughness={0.95}
+        metalness={0}
+        flatShading
       />
     </mesh>
   );
@@ -264,13 +350,13 @@ function Sahne({
 
   // Dal sayisina gore yayilma olcegi + konteynerin agzina gore mutlak tavan
   const olcek = sayiOlcegi(toplamDal);
-  const efektifTiltMax = Math.min(tiltBase * olcek, Math.atan2(maxRadius, CICEK_REFERANS_YUKSEKLIK * 0.9));
+  const efektifTiltMax = Math.min(tiltBase * olcek, Math.atan2(maxRadius, CICEK_TOPLAM_BOY * 0.9));
 
   // Kraft/luks sarma boyutu, gercek yayilmaya gore dinamik hesaplanir ki
   // az dalda gereksiz genis durmasin
-  const yayilmaYaricap = CICEK_REFERANS_YUKSEKLIK * Math.sin(efektifTiltMax);
+  const yayilmaYaricap = CICEK_TOPLAM_BOY * Math.sin(efektifTiltMax);
   const sarmaUstYaricap = Math.max(0.13, yayilmaYaricap + 0.055);
-  const sarmaYukseklik = Math.max(0.22, pivotY + CICEK_REFERANS_YUKSEKLIK * 0.42);
+  const sarmaYukseklik = Math.max(0.22, pivotY + CICEK_TOPLAM_BOY * 0.42);
 
   return (
     <>

@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .next
 next-env.d.ts
+*.tsbuildinfo
 
 # Calisma zamani verisi (admin panelinden yonetilir; ilk calistirmada
 # lib/products.ts icindeki katalogdan otomatik olusturulur)
