@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/components/cart/cart-context";
 import CartDrawer from "@/components/cart/cart-drawer";
+import WhatsAppButton from "@/components/ui/whatsapp-button";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,6 +32,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
+          <WhatsAppButton />
         </CartProvider>
       </body>
     </html>

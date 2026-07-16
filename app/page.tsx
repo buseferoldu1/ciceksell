@@ -21,8 +21,9 @@ export default async function Home() {
     <main>
       <Navbar />
       <BloomHero products={products} />
-      <Features />
+      {/* Aranjman Cemberi artik Neden Ciceksel'den once */}
       <CircularGallerySection products={products} />
+      <Features />
       <ModelShowcase products={modelProducts} />
       <About />
       <Faq />
