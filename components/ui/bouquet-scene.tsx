@@ -23,14 +23,17 @@ import { FLOWER_OPTIONS, WRAP_OPTIONS } from "@/lib/bouquet";
  * Yerlesim mantigi:
  *  Tum dallarin sap baslangici (bagli noktasi) TEK bir pivot noktasinda
  *  birlesir; her dal sadece farkli bir yone (aci) ve farkli bir egimle
- *  (tilt) o pivottan disari dogru acilir. Bu da gercek bir buket gibi
- *  "elde tutulan tek nokta -> disari yelpaze acilan konik" gorunumu verir.
+ *  (tilt) o pivottan disari dogru acilir. Turler ic ice (round-robin)
+ *  siralanir ki ayni renk merkezde yigilip digerleri disari itilmesin.
+ *  Yayilma yaricapi toplam dal sayisina gore olceklenir: az dalda kompakt,
+ *  cok dalda daha dolgun bir buket olusur; kraft/luks sarma da bu yayilima
+ *  gore dinamik boyutlanir, boylece hicbir zaman gereksiz genis durmaz.
  */
 
-const MAX_GORUNUR = 24;
+const MAX_GORUNUR = 28;
 
 /** Tum cicekler ayni buyuklukte gorunsun diye sabit hedef yukseklik */
-const CICEK_YUKSEKLIK = 0.44;
+const CICEK_YUKSEKLIK = 0.56;
 
 /** Modeli hedef yukseklige olceklendirip merkezler */
 function normalize(obj: THREE.Object3D, hedefYukseklik: number) {
@@ -132,20 +135,30 @@ function KagitSarma({ renk, yukseklik, ustYaricap }: { renk: string; yukseklik: 
   );
 }
 
-/** Konteyner turune gore dallarin bagli noktasi, egim ve sarma boyutlari */
+/** Konteyner turune gore dallarin bagli noktasi, taban egimi ve mutlak yaricap tavani */
 function yerlesimAyarlari(kapId: string) {
   switch (kapId) {
     case "vazo":
       // Vazonun agzinin hemen altindan baslar; sap ucu vazo icinde gizli
-      // kalir, tomurcuklar agizdan yukari tasar
-      return { pivotY: 0.5, tiltMax: 0.26, jitter: 0.02 };
+      // kalir, tomurcuklar agizdan yukari tasar. Vazonun dar agzindan
+      // tasmasin diye yaricap sikica sinirlanir.
+      return { pivotY: 0.5, tiltBase: 0.26, jitter: 0.02, maxRadius: 0.16 };
     case "kutu":
-      // Kutunun agzinin hemen altindan baslar
-      return { pivotY: 0.24, tiltMax: 0.22, jitter: 0.018 };
+      // Kutunun agzinin hemen altindan baslar; kutunun kenarindan tasmasin
+      return { pivotY: 0.24, tiltBase: 0.22, jitter: 0.018, maxRadius: 0.17 };
     default:
       // Kraft/luks kagit sarma: serbest, dogal yelpaze acilimi
-      return { pivotY: 0.07, tiltMax: 0.48, jitter: 0.014 };
+      return { pivotY: 0.07, tiltBase: 0.5, jitter: 0.014, maxRadius: 0.34 };
   }
+}
+
+/**
+ * Dal sayisina gore yayilma olceği: az dalda kompakt, cok dalda daha
+ * dolgun bir buket. 0.55 - 1.1 arasinda katsayi doner.
+ */
+function sayiOlcegi(toplamDal: number) {
+  const olcek = 0.55 + Math.sqrt(Math.min(toplamDal, 12) / 12) * 0.55;
+  return Math.min(1.1, olcek);
 }
 
 /** Sahne icerigi — dallari buket seklinde yerlestirir */
@@ -163,27 +176,58 @@ function Sahne({
     if (grupRef.current) grupRef.current.rotation.y += delta * 0.15;
   });
 
-  // Dallari duz listeye ac
+  // Dallari tur ic ice (round-robin) siralanmis duz listeye ac.
+  // Boylece ayni renk merkeze yigilip diger renkler disari itilmez;
+  // her tur genel yayilima esit oranda dagilir.
   const dallar = useMemo(() => {
+    const gruplar = Object.entries(stems)
+      .map(([id, adet]) => ({ f: FLOWER_OPTIONS.find((x) => x.id === id), adet }))
+      .filter((g): g is { f: NonNullable<typeof g.f>; adet: number } => !!g.f?.model && g.adet > 0);
+
     const liste: { url: string; id: string }[] = [];
-    Object.entries(stems).forEach(([id, adet]) => {
-      const f = FLOWER_OPTIONS.find((x) => x.id === id);
-      if (!f?.model) return;
-      for (let i = 0; i < adet; i++) liste.push({ url: f.model, id: `${id}-${i}` });
-    });
-    return liste.slice(0, MAX_GORUNUR);
+    const kalan = gruplar.map((g) => g.adet);
+    let toplamKalan = kalan.reduce((a, b) => a + b, 0);
+    let k = 0;
+    let guvenlik = 0;
+    while (toplamKalan > 0 && liste.length < MAX_GORUNUR && guvenlik < 10000) {
+      guvenlik++;
+      if (kalan[k] > 0) {
+        const g = gruplar[k];
+        const kullanilan = g.adet - kalan[k];
+        liste.push({ url: g.f.model, id: `${g.f.id}-${kullanilan}` });
+        kalan[k]--;
+        toplamKalan--;
+      }
+      k = (k + 1) % gruplar.length;
+    }
+    return liste;
   }, [stems]);
+
+  const toplamDal = useMemo(
+    () => Object.values(stems).reduce((s, n) => s + n, 0),
+    [stems]
+  );
 
   const kap = WRAP_OPTIONS.find((w) => w.id === wrapId) ?? WRAP_OPTIONS[0];
   const vazoda = kap.id === "vazo";
   const kutuda = kap.id === "kutu";
-  const { pivotY, tiltMax, jitter } = yerlesimAyarlari(kap.id);
+  const { pivotY, tiltBase, jitter, maxRadius } = yerlesimAyarlari(kap.id);
+
+  // Dal sayisina gore yayilma olcegi + konteynerin agzina gore mutlak tavan
+  const olcek = sayiOlcegi(toplamDal);
+  const efektifTiltMax = Math.min(tiltBase * olcek, Math.atan2(maxRadius, CICEK_YUKSEKLIK * 0.9));
+
+  // Kraft/luks sarma boyutu, gercek yayilmaya gore dinamik hesaplanir ki
+  // az dalda gereksiz genis durmasin
+  const yayilmaYaricap = CICEK_YUKSEKLIK * Math.sin(efektifTiltMax);
+  const sarmaUstYaricap = Math.max(0.13, yayilmaYaricap + 0.055);
+  const sarmaYukseklik = Math.max(0.22, pivotY + CICEK_YUKSEKLIK * 0.42);
 
   return (
     <>
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[3, 5, 2]} intensity={1.1} castShadow />
-      <directionalLight position={[-3, 2, -2]} intensity={0.4} />
+      <ambientLight intensity={0.75} />
+      <directionalLight position={[3, 5, 2]} intensity={1.2} castShadow />
+      <directionalLight position={[-3, 2, -2]} intensity={0.45} />
 
       <group ref={grupRef}>
         {/* Kap */}
@@ -192,8 +236,8 @@ function Sahne({
         {!vazoda && !kutuda && (
           <KagitSarma
             renk={kap.id === "luks" ? "#f6b6be" : "#c9b8a3"}
-            yukseklik={0.4}
-            ustYaricap={0.3}
+            yukseklik={sarmaYukseklik}
+            ustYaricap={sarmaUstYaricap}
           />
         )}
 
@@ -202,7 +246,7 @@ function Sahne({
         {dallar.map((d, i) => {
           const t = dallar.length <= 1 ? 0 : i / (dallar.length - 1);
           const aci = i * 2.399963; // altin aci -> dengeli sag/sol dagilim
-          const tilt = 0.08 + Math.sqrt(t) * (tiltMax - 0.08);
+          const tilt = 0.07 + Math.sqrt(t) * (efektifTiltMax - 0.07);
           // Bagli noktada hafif titresim: tam ust uste binmesin
           const jx = Math.cos(aci) * jitter;
           const jz = Math.sin(aci) * jitter;
@@ -265,8 +309,8 @@ export default function BouquetScene({
     <div ref={ref} className={className}>
       {gorunur && (
         <Canvas
-          camera={{ position: [0, 0.85, 1.9], fov: 40 }}
-          dpr={[1, 1.6]}
+          camera={{ position: [0, 0.85, 1.75], fov: 37 }}
+          dpr={[1, 1.8]}
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
@@ -277,7 +321,7 @@ export default function BouquetScene({
             enableZoom={false}
             minPolarAngle={Math.PI / 5}
             maxPolarAngle={Math.PI / 1.9}
-            target={[0, 0.42, 0]}
+            target={[0, 0.5, 0]}
           />
         </Canvas>
       )}

@@ -223,7 +223,7 @@ export default function BouquetBuilder() {
               </h3>
 
               {/* Canli 3D onizleme */}
-              <div className="relative mb-5 h-56 overflow-hidden rounded-xl bg-gradient-to-b from-white/[0.06] to-transparent">
+              <div className="relative mb-5 h-72 overflow-hidden rounded-xl bg-gradient-to-b from-white/[0.06] to-transparent">
                 {bosMu ? (
                   <div className="flex h-full flex-col items-center justify-center gap-2 text-[#e5e2e3]/25">
                     <Flower2 className="h-8 w-8" />
