@@ -6,12 +6,19 @@ import { isAdmin } from "@/lib/admin-key";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED = new Map([
+// Bilinen tipler icin duzgun uzantiya cevrilir; taniyamadigimiz ama
+// "image/" ile baslayan her tip de kabul edilir (orn. HEIC/HEIC gonderen
+// eski tarayicilar) — istemci genelde JPEG'e cevirip gonderir, bu sadece
+// ek guvence.
+const KNOWN_EXT = new Map([
   ["image/jpeg", ".jpg"],
   ["image/png", ".png"],
   ["image/webp", ".webp"],
+  ["image/heic", ".heic"],
+  ["image/heif", ".heif"],
+  ["image/gif", ".gif"],
 ]);
-const MAX_SIZE = 8 * 1024 * 1024; // 8 MB
+const MAX_SIZE = 15 * 1024 * 1024; // 15 MB (istemci genelde kucultup gonderir)
 
 // Uretimde (Vercel) dosya sistemi salt-okunurdur; gorseller Blob'a
 // yuklenir. Yerelde token yoksa public/uploads klasorune yazilir.
@@ -28,16 +35,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "file alanı zorunlu" }, { status: 400 });
   }
 
-  const ext = ALLOWED.get(file.type);
+  // Bazi mobil tarayicilar galeriden secilen dosya icin bos MIME tipi
+  // gonderir; dosya adindaki uzantiya da bakiyoruz ki yukleme reddedilmesin.
+  const adUzantisi = (file.name.match(/\.[a-z0-9]+$/i)?.[0] ?? "").toLowerCase();
+  const bilinenUzantilar = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".gif"];
+  const ext =
+    KNOWN_EXT.get(file.type) ??
+    (file.type.startsWith("image/") ? ".jpg" : null) ??
+    (!file.type && bilinenUzantilar.includes(adUzantisi) ? adUzantisi : null);
   if (!ext) {
     return NextResponse.json(
-      { error: "Yalnızca JPEG, PNG veya WebP yüklenebilir" },
+      { error: "Yalnızca fotoğraf dosyaları yüklenebilir" },
       { status: 400 }
     );
   }
   if (file.size > MAX_SIZE) {
     return NextResponse.json(
-      { error: "Dosya 8 MB'den büyük olamaz" },
+      { error: "Dosya 15 MB'den büyük olamaz" },
       { status: 400 }
     );
   }
@@ -50,7 +64,7 @@ export async function POST(req: Request) {
   if (BLOB_TOKEN) {
     const blob = await put(`urunler/${name}`, file, {
       access: "public",
-      contentType: file.type,
+      contentType: file.type || "image/jpeg",
       token: BLOB_TOKEN,
     });
     return NextResponse.json({ path: blob.url }, { status: 201 });
