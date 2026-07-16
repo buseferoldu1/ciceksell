@@ -29,9 +29,27 @@ body {
   will-change: transform;
 }
 
+/* Musteri yorumlari seridi: liste iki kez basildigi icin -50% kesintisiz doner */
+@keyframes marquee-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.marquee-track {
+  animation: marquee-scroll 45s linear infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .petal-fall {
     animation: none;
     display: none;
+  }
+  /* Hareket hassasiyeti olanlar icin kayma dursun */
+  .marquee-track {
+    animation: none;
   }
 }

@@ -4,6 +4,7 @@ import Features from "@/components/ui/features";
 import CircularGallerySection from "@/components/ui/circular-gallery-section";
 import ModelShowcase from "@/components/ui/model-showcase";
 import About from "@/components/ui/about";
+import Yorumlar from "@/components/ui/testimonials-section";
 import Faq from "@/components/ui/faq";
 import Contact from "@/components/ui/contact";
 import Footer from "@/components/ui/footer";
@@ -26,6 +27,7 @@ export default async function Home() {
       <Features />
       <ModelShowcase products={modelProducts} />
       <About />
+      <Yorumlar />
       <Faq />
       <Contact />
       <Footer />

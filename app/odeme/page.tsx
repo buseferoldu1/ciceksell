@@ -20,6 +20,9 @@ import {
 } from "@/lib/products";
 import PetalBurst from "@/components/ui/petal-burst";
 import FallingPetals from "@/components/ui/falling-petals";
+import ProgressIndicator from "@/components/ui/progress-indicator";
+
+const ADIMLAR = ["Sepet", "Teslimat", "Ödeme", "Onay"];
 
 interface FormState {
   name: string;
@@ -66,6 +69,19 @@ export default function OdemePage() {
   const shipping =
     subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + shipping;
+
+  // Adim gostergesi: form doldukca ilerler (Sepet dolu -> 1'den baslar)
+  const teslimatTamam =
+    form.name.trim().length >= 3 &&
+    form.phone.replace(/\D/g, "").length >= 10 &&
+    form.address.trim().length >= 10;
+  const kartTamam =
+    form.cardName.trim().length >= 3 &&
+    form.cardNumber.replace(/\D/g, "").length === 16 &&
+    /^\d{2}\/\d{2}$/.test(form.expiry) &&
+    form.cvc.length >= 3;
+  const aktifAdim =
+    status === "success" ? 3 : teslimatTamam ? (kartTamam ? 2 : 2) : 1;
 
   const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let value = e.target.value;
@@ -145,6 +161,10 @@ export default function OdemePage() {
           transition={{ duration: 0.5 }}
           className="relative z-10 max-w-md text-center"
         >
+          {/* Tum adimlar tamamlandi */}
+          <div className="mb-10">
+            <ProgressIndicator steps={ADIMLAR} current={ADIMLAR.length} />
+          </div>
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -238,6 +258,16 @@ export default function OdemePage() {
         >
           Ödeme
         </motion.h1>
+
+        {/* Adim gostergesi */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="mx-auto mt-8 max-w-lg"
+        >
+          <ProgressIndicator steps={ADIMLAR} current={aktifAdim} />
+        </motion.div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
           {/* Sol: form */}

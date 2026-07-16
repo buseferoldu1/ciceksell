@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { CartProvider } from "@/components/cart/cart-context";
 import CartDrawer from "@/components/cart/cart-drawer";
 import WhatsAppButton from "@/components/ui/whatsapp-button";
+import CiceksekDock from "@/components/ui/ciceksel-dock";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,6 +33,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
+          <CiceksekDock />
           <WhatsAppButton />
         </CartProvider>
       </body>

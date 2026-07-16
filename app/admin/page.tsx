@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
+  Clock,
   Flower2,
   ImagePlus,
   Loader2,
@@ -15,10 +16,12 @@ import {
   Plus,
   ShoppingBag,
   Trash2,
+  Wallet,
   X,
 } from "lucide-react";
 import { formatPrice, type Product } from "@/lib/products";
 import AdminLogin from "@/components/ui/admin-login";
+import { StatsCard } from "@/components/ui/stats-card-1";
 import type { Order, OrderStatus } from "@/lib/store";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -354,6 +357,58 @@ export default function AdminPage() {
         )}
 
         {/* ---------- Siparisler ---------- */}
+        {/* Istatistikler: gercek siparis/urun verisinden hesaplanir */}
+        {!loading && tab === "siparisler" && orders.length > 0 && (
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              index={0}
+              title="Toplam Ciro"
+              value={formatPrice(
+                orders
+                  .filter((o) => o.status !== "iptal")
+                  .reduce((s, o) => s + o.total, 0)
+              )}
+              icon={<Wallet className="h-4 w-4" />}
+              change={`${orders.filter((o) => o.status === "iptal").length} iptal hariç`}
+            />
+            <StatsCard
+              index={1}
+              title="Sipariş"
+              value={String(orders.length)}
+              icon={<ShoppingBag className="h-4 w-4" />}
+              change={`${orders.filter((o) => o.status === "teslim-edildi").length} teslim edildi`}
+              changeType="positive"
+            />
+            <StatsCard
+              index={2}
+              title="Bekleyen"
+              value={String(
+                orders.filter((o) => o.status === "yeni" || o.status === "hazirlaniyor")
+                  .length
+              )}
+              icon={<Clock className="h-4 w-4" />}
+              change="ilgilenilmeyi bekliyor"
+              changeType={
+                orders.filter((o) => o.status === "yeni").length > 0
+                  ? "negative"
+                  : "neutral"
+              }
+            />
+            <StatsCard
+              index={3}
+              title="Ortalama Sepet"
+              value={formatPrice(
+                Math.round(
+                  orders.filter((o) => o.status !== "iptal").reduce((s, o) => s + o.total, 0) /
+                    Math.max(1, orders.filter((o) => o.status !== "iptal").length)
+                )
+              )}
+              icon={<Package className="h-4 w-4" />}
+              change={`${products.length} ürün katalogda`}
+            />
+          </div>
+        )}
+
         {!loading && tab === "siparisler" && (
           <div className="space-y-4">
             {orders.length === 0 && (
