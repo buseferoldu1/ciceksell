@@ -23,7 +23,7 @@ import {
 import { formatPrice, type Product } from "@/lib/products";
 import AdminLogin from "@/components/ui/admin-login";
 import { StatsCard } from "@/components/ui/stats-card-1";
-import type { Order, OrderStatus } from "@/lib/store";
+import type { Order, OrderStatus, PaymentStatus } from "@/lib/store";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   yeni: "Yeni",
@@ -39,6 +39,18 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   yolda: "bg-purple-100 text-purple-700",
   "teslim-edildi": "bg-emerald-100 text-emerald-700",
   iptal: "bg-red-100 text-red-700",
+};
+
+const PAYMENT_LABELS: Record<PaymentStatus, string> = {
+  odendi: "Ödendi",
+  beklemede: "Ödeme Bekliyor",
+  basarisiz: "Ödeme Başarısız",
+};
+
+const PAYMENT_COLORS: Record<PaymentStatus, string> = {
+  odendi: "bg-emerald-100 text-emerald-700",
+  beklemede: "bg-amber-100 text-amber-700",
+  basarisiz: "bg-red-100 text-red-700",
 };
 
 interface ProductForm {
@@ -427,12 +439,17 @@ export default function AdminPage() {
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-serif text-lg font-bold">{o.id}</span>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[o.status]}`}
                       >
                         {STATUS_LABELS[o.status]}
+                      </span>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${PAYMENT_COLORS[o.paymentStatus]}`}
+                      >
+                        {PAYMENT_LABELS[o.paymentStatus]}
                       </span>
                     </div>
                     <div className="mt-1 text-xs text-[#33323a]/50">

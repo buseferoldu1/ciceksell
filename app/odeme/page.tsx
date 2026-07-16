@@ -3,126 +3,89 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  CreditCard,
-  Flower2,
-  Info,
-  Loader2,
-  Lock,
-} from "lucide-react";
+import { ArrowLeft, Flower2, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import {
   formatPrice,
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_FEE,
 } from "@/lib/products";
-import PetalBurst from "@/components/ui/petal-burst";
 import FallingPetals from "@/components/ui/falling-petals";
 import ProgressIndicator from "@/components/ui/progress-indicator";
 import GlassCalendar from "@/components/ui/glass-calendar";
 
-const ADIMLAR = ["Sepet", "Teslimat", "Ödeme", "Onay"];
+const ADIMLAR = ["Sepet", "Teslimat", "Ödeme"];
 
 interface FormState {
   name: string;
   phone: string;
+  email: string;
   address: string;
   note: string;
-  cardName: string;
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
 }
 
 const EMPTY_FORM: FormState = {
   name: "",
   phone: "",
+  email: "",
   address: "",
   note: "",
-  cardName: "",
-  cardNumber: "",
-  expiry: "",
-  cvc: "",
 };
 
-const formatCardNumber = (v: string) =>
-  v
-    .replace(/\D/g, "")
-    .slice(0, 16)
-    .replace(/(.{4})/g, "$1 ")
-    .trim();
-
-const formatExpiry = (v: string) => {
-  const digits = v.replace(/\D/g, "").slice(0, 4);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-};
+const gecerliEposta = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
 export default function OdemePage() {
-  const { items, subtotal, clear } = useCart();
+  const { items, subtotal } = useCart();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
-  const [status, setStatus] = useState<"form" | "processing" | "success">("form");
-  const [orderNo, setOrderNo] = useState("");
+  const [status, setStatus] = useState<"form" | "processing">("form");
+  const [genelHata, setGenelHata] = useState("");
   const [teslimatTarihi, setTeslimatTarihi] = useState<Date>(new Date());
 
   const shipping =
     subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + shipping;
 
-  // Adim gostergesi: form doldukca ilerler (Sepet dolu -> 1'den baslar)
   const teslimatTamam =
     form.name.trim().length >= 3 &&
     form.phone.replace(/\D/g, "").length >= 10 &&
+    gecerliEposta(form.email) &&
     form.address.trim().length >= 10;
-  const kartTamam =
-    form.cardName.trim().length >= 3 &&
-    form.cardNumber.replace(/\D/g, "").length === 16 &&
-    /^\d{2}\/\d{2}$/.test(form.expiry) &&
-    form.cvc.length >= 3;
-  const aktifAdim =
-    status === "success" ? 3 : teslimatTamam ? (kartTamam ? 2 : 2) : 1;
+  const aktifAdim = teslimatTamam ? 2 : 1;
 
-  const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    let value = e.target.value;
-    if (key === "cardNumber") value = formatCardNumber(value);
-    if (key === "expiry") value = formatExpiry(value);
-    if (key === "cvc") value = value.replace(/\D/g, "").slice(0, 4);
-    setForm((f) => ({ ...f, [key]: value }));
-  };
+  const set =
+    (key: keyof FormState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setForm((f) => ({ ...f, [key]: e.target.value }));
+    };
 
   const validate = (): boolean => {
     const next: Partial<Record<keyof FormState, string>> = {};
     if (form.name.trim().length < 3) next.name = "Ad soyad girin";
-    if (form.phone.replace(/\D/g, "").length < 10) next.phone = "Geçerli telefon girin";
+    if (form.phone.replace(/\D/g, "").length < 10)
+      next.phone = "Geçerli telefon girin";
+    if (!gecerliEposta(form.email)) next.email = "Geçerli e-posta girin";
     if (form.address.trim().length < 10) next.address = "Teslimat adresi girin";
-    if (form.cardName.trim().length < 3) next.cardName = "Kart üzerindeki isim";
-    if (form.cardNumber.replace(/\D/g, "").length !== 16) next.cardNumber = "16 haneli kart numarası";
-    if (!/^\d{2}\/\d{2}$/.test(form.expiry)) next.expiry = "AA/YY";
-    if (form.cvc.length < 3) next.cvc = "CVC";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setGenelHata("");
     if (!validate()) return;
     setStatus("processing");
-    // DEMO: gercek odeme saglayicisi (iyzico/Stripe) buraya baglanir.
-    // Siparis, admin panelinde gorunmesi icin API'ye kaydedilir.
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/payment/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer: {
             name: form.name,
             phone: form.phone,
+            email: form.email,
             address: form.address,
             note: form.note || undefined,
-            // Musterinin sectigi teslimat tarihi (admin panelinde gorunur)
             deliveryDate: teslimatTarihi.toISOString().slice(0, 10),
           },
           items: items.map((i) => ({
@@ -133,17 +96,17 @@ export default function OdemePage() {
           })),
         }),
       });
-      const order = await res.json();
-      if (!res.ok) throw new Error(order?.error || "Sipariş kaydedilemedi");
-      setOrderNo(order.id);
-      setStatus("success");
-      clear();
-    } catch {
+      const data = await res.json();
+      if (!res.ok || !data?.paymentPageUrl) {
+        throw new Error(data?.error || "Ödeme başlatılamadı");
+      }
+      // iyzico'nun guvenli odeme sayfasina yonlendir
+      window.location.href = data.paymentPageUrl;
+    } catch (err) {
       setStatus("form");
-      setErrors((prev) => ({
-        ...prev,
-        cvc: "Sipariş kaydedilemedi, tekrar deneyin",
-      }));
+      setGenelHata(
+        err instanceof Error ? err.message : "Ödeme başlatılamadı, tekrar deneyin"
+      );
     }
   };
 
@@ -151,58 +114,6 @@ export default function OdemePage() {
     `w-full rounded-lg border bg-white/[0.04] px-4 py-3 text-sm text-[#e5e2e3] placeholder-[#e5e2e3]/30 outline-none transition-all duration-300 focus:border-[#f6b6be]/60 focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(246,182,190,0.12)] ${
       err ? "border-red-400/60" : "border-white/10"
     }`;
-
-  if (status === "success") {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#131314] px-4 text-[#e5e2e3]">
-        {/* Kutlama: yapraklar merkezden sacilir, ardindan usttan yagar */}
-        <PetalBurst />
-        <FallingPetals count={14} />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="relative z-10 max-w-md text-center"
-        >
-          {/* Tum adimlar tamamlandi */}
-          <div className="mb-10">
-            <ProgressIndicator steps={ADIMLAR} current={ADIMLAR.length} />
-          </div>
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
-            className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15"
-          >
-            {/* Disari dogru genisleyen halka */}
-            <motion.span
-              initial={{ scale: 0.8, opacity: 0.7 }}
-              animate={{ scale: [0.8, 1.8], opacity: [0.7, 0] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
-              className="absolute inset-0 rounded-full border-2 border-emerald-400/50"
-            />
-            <CheckCircle2 className="h-10 w-10 text-emerald-400" />
-          </motion.div>
-          <h1 className="font-serif text-3xl font-bold">Siparişiniz Alındı!</h1>
-          <p className="mt-3 text-[#e5e2e3]/60">
-            Sipariş numaranız{" "}
-            <span className="font-semibold text-[#f6b6be]">{orderNo}</span>.
-            Aranjmanınız özenle hazırlanıp en kısa sürede kapınızda olacak.
-          </p>
-          <p className="mt-2 text-xs text-[#e5e2e3]/40">
-            (Bu bir demo siparişidir — gerçek ödeme alınmamıştır.)
-          </p>
-          <Link
-            href="/vitrin"
-            className="mt-8 inline-block rounded-full bg-[#f6b6be] px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3]"
-          >
-            Vitrine Dön
-          </Link>
-        </motion.div>
-      </main>
-    );
-  }
 
   if (items.length === 0) {
     return (
@@ -242,7 +153,6 @@ export default function OdemePage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#131314] text-[#e5e2e3]">
-      {/* Zarif arka plan: seyrek dusen yapraklar */}
       <FallingPetals count={8} />
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-10 lg:px-8">
@@ -263,7 +173,6 @@ export default function OdemePage() {
           Ödeme
         </motion.h1>
 
-        {/* Adim gostergesi */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -274,7 +183,7 @@ export default function OdemePage() {
         </motion.div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
-          {/* Sol: form */}
+          {/* Sol: teslimat formu */}
           <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -303,10 +212,23 @@ export default function OdemePage() {
                     placeholder="Telefon (05xx xxx xx xx)"
                     value={form.phone}
                     onChange={set("phone")}
+                    inputMode="tel"
                     className={inputCls(errors.phone)}
                   />
                   {errors.phone && (
                     <p className="mt-1 text-xs text-red-400">{errors.phone}</p>
+                  )}
+                </div>
+                <div className="sm:col-span-2">
+                  <input
+                    placeholder="E-posta (sipariş bilgilendirmesi için)"
+                    value={form.email}
+                    onChange={set("email")}
+                    inputMode="email"
+                    className={inputCls(errors.email)}
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-400">{errors.email}</p>
                   )}
                 </div>
                 <div className="sm:col-span-2">
@@ -330,7 +252,6 @@ export default function OdemePage() {
                   />
                 </div>
 
-                {/* Teslimat tarihi */}
                 <div className="sm:col-span-2">
                   <label className="mb-2 block text-xs font-medium text-[#e5e2e3]/60">
                     Teslimat Tarihi
@@ -344,82 +265,36 @@ export default function OdemePage() {
             </section>
 
             <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-              <div className="mb-5 flex items-center justify-between">
+              <div className="mb-4 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 font-serif text-xl font-bold">
-                  <CreditCard className="h-5 w-5 text-[#f6b6be]" />
-                  Kart Bilgileri
+                  <ShieldCheck className="h-5 w-5 text-[#f6b6be]" />
+                  Güvenli Ödeme
                 </h2>
                 <span className="flex items-center gap-1 text-xs text-[#e5e2e3]/40">
                   <Lock className="h-3 w-3" />
-                  SSL korumalı
+                  iyzico · 3D Secure
                 </span>
               </div>
 
-              <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-xs text-amber-200/80">
-                <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>
-                  Bu bir <strong>demo ödeme sayfasıdır</strong> — kart bilgileriniz
-                  hiçbir yere gönderilmez ve gerçek tahsilat yapılmaz. Canlıya
-                  geçişte iyzico veya Stripe entegrasyonu bu forma bağlanır.
-                </span>
-              </div>
+              <p className="mb-5 rounded-lg border border-[#f6b6be]/15 bg-[#f6b6be]/[0.05] px-4 py-3 text-xs leading-relaxed text-[#e5e2e3]/70">
+                “Güvenli Ödemeye Geç” dediğinizde iyzico’nun güvenli ödeme
+                sayfasına yönlendirilirsiniz. Kart bilgileriniz{" "}
+                <strong>yalnızca iyzico</strong> tarafından işlenir, bizim
+                sistemimizde saklanmaz.
+              </p>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <input
-                    placeholder="Kart üzerindeki isim"
-                    value={form.cardName}
-                    onChange={set("cardName")}
-                    className={inputCls(errors.cardName)}
-                  />
-                  {errors.cardName && (
-                    <p className="mt-1 text-xs text-red-400">{errors.cardName}</p>
-                  )}
-                </div>
-                <div className="sm:col-span-2">
-                  <input
-                    placeholder="Kart numarası"
-                    inputMode="numeric"
-                    value={form.cardNumber}
-                    onChange={set("cardNumber")}
-                    className={inputCls(errors.cardNumber)}
-                  />
-                  {errors.cardNumber && (
-                    <p className="mt-1 text-xs text-red-400">{errors.cardNumber}</p>
-                  )}
-                </div>
-                <div>
-                  <input
-                    placeholder="SKT (AA/YY)"
-                    inputMode="numeric"
-                    value={form.expiry}
-                    onChange={set("expiry")}
-                    className={inputCls(errors.expiry)}
-                  />
-                  {errors.expiry && (
-                    <p className="mt-1 text-xs text-red-400">{errors.expiry}</p>
-                  )}
-                </div>
-                <div>
-                  <input
-                    placeholder="CVC"
-                    inputMode="numeric"
-                    value={form.cvc}
-                    onChange={set("cvc")}
-                    className={inputCls(errors.cvc)}
-                  />
-                  {errors.cvc && (
-                    <p className="mt-1 text-xs text-red-400">{errors.cvc}</p>
-                  )}
-                </div>
-              </div>
+              {genelHata && (
+                <p className="mb-4 rounded-lg border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                  {genelHata}
+                </p>
+              )}
 
               <motion.button
                 type="submit"
                 disabled={status === "processing"}
                 whileHover={status === "form" ? { scale: 1.02 } : undefined}
                 whileTap={status === "form" ? { scale: 0.98 } : undefined}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#f6b6be] py-4 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3] disabled:opacity-70"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#f6b6be] py-4 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3] disabled:opacity-70"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {status === "processing" ? (
@@ -431,7 +306,7 @@ export default function OdemePage() {
                       className="flex items-center gap-2"
                     >
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      İşleniyor...
+                      Yönlendiriliyor...
                     </motion.span>
                   ) : (
                     <motion.span
@@ -439,8 +314,10 @@ export default function OdemePage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
+                      className="flex items-center gap-2"
                     >
-                      {formatPrice(total)} Öde (Demo)
+                      <Lock className="h-3.5 w-3.5" />
+                      {formatPrice(total)} · Güvenli Ödemeye Geç
                     </motion.span>
                   )}
                 </AnimatePresence>

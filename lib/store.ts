@@ -26,6 +26,9 @@ export type OrderStatus =
   | "teslim-edildi"
   | "iptal";
 
+/** Odeme durumu — iyzico ile online tahsilat icin. */
+export type PaymentStatus = "beklemede" | "odendi" | "basarisiz";
+
 export interface OrderItem {
   id: string;
   name: string;
@@ -49,10 +52,15 @@ export interface Order {
   id: string;
   createdAt: string;
   status: OrderStatus;
+  /** Online odeme durumu. Eski/demo kayitlarda "odendi" varsayilir. */
+  paymentStatus: PaymentStatus;
+  /** iyzico tarafindan donen odeme kimligi (basarili tahsilatlarda). */
+  paymentId?: string;
   customer: {
     name: string;
     phone: string;
     address: string;
+    email?: string;
     note?: string;
     /** Musterinin sectigi teslimat tarihi (ISO, yyyy-MM-dd) */
     deliveryDate?: string;
@@ -100,6 +108,10 @@ async function ensureSchema() {
           total INTEGER NOT NULL
         )
       `;
+      // Odeme alanlari sonradan eklendi: mevcut kayitlar "odendi" sayilir
+      // (eski/demo siparisler), yeni online siparisler acikca "beklemede".
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'odendi'`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_id TEXT`;
       await sql`
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
@@ -270,6 +282,8 @@ type OrderRow = {
   id: string;
   created_at: string | Date;
   status: OrderStatus;
+  payment_status: PaymentStatus;
+  payment_id: string | null;
   customer: Order["customer"];
   items: OrderItem[];
   subtotal: number;
@@ -282,6 +296,8 @@ function rowToOrder(r: OrderRow): Order {
     id: r.id,
     createdAt: new Date(r.created_at).toISOString(),
     status: r.status,
+    paymentStatus: r.payment_status ?? "odendi",
+    ...(r.payment_id ? { paymentId: r.payment_id } : {}),
     customer: r.customer,
     items: r.items,
     subtotal: r.subtotal,
@@ -294,7 +310,8 @@ export async function getOrders(): Promise<Order[]> {
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      SELECT id, created_at, status, customer, items, subtotal, shipping, total
+      SELECT id, created_at, status, payment_status, payment_id,
+             customer, items, subtotal, shipping, total
       FROM orders ORDER BY created_at DESC
     `) as OrderRow[];
     return rows.map(rowToOrder);
@@ -302,21 +319,39 @@ export async function getOrders(): Promise<Order[]> {
   return readFileOrders();
 }
 
-export async function addOrder(
-  data: Omit<Order, "id" | "createdAt" | "status">
-): Promise<Order> {
-  const id = `CS-${Date.now().toString().slice(-8)}`;
+export async function getOrderById(id: string): Promise<Order | null> {
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      INSERT INTO orders (id, status, customer, items, subtotal, shipping, total)
+      SELECT id, created_at, status, payment_status, payment_id,
+             customer, items, subtotal, shipping, total
+      FROM orders WHERE id = ${id}
+    `) as OrderRow[];
+    return rows[0] ? rowToOrder(rows[0]) : null;
+  }
+  const orders = await readFileOrders();
+  return orders.find((o) => o.id === id) ?? null;
+}
+
+export async function addOrder(
+  data: Omit<Order, "id" | "createdAt" | "status" | "paymentStatus" | "paymentId"> & {
+    paymentStatus?: PaymentStatus;
+  }
+): Promise<Order> {
+  const id = `CS-${Date.now().toString().slice(-8)}`;
+  const paymentStatus: PaymentStatus = data.paymentStatus ?? "odendi";
+  if (sql) {
+    await ensureSchema();
+    const rows = (await sql`
+      INSERT INTO orders (id, status, payment_status, customer, items, subtotal, shipping, total)
       VALUES (
-        ${id}, 'yeni',
+        ${id}, 'yeni', ${paymentStatus},
         ${JSON.stringify(data.customer)}::jsonb,
         ${JSON.stringify(data.items)}::jsonb,
         ${data.subtotal}, ${data.shipping}, ${data.total}
       )
-      RETURNING id, created_at, status, customer, items, subtotal, shipping, total
+      RETURNING id, created_at, status, payment_status, payment_id,
+                customer, items, subtotal, shipping, total
     `) as OrderRow[];
     return rowToOrder(rows[0]);
   }
@@ -326,10 +361,38 @@ export async function addOrder(
     id,
     createdAt: new Date().toISOString(),
     status: "yeni",
+    paymentStatus,
   };
   orders.unshift(order);
   await writeFileOrders(orders);
   return order;
+}
+
+/** iyzico callback'i sonrasi odeme durumunu gunceller. */
+export async function setOrderPayment(
+  id: string,
+  paymentStatus: PaymentStatus,
+  paymentId?: string
+): Promise<Order | null> {
+  if (sql) {
+    await ensureSchema();
+    const rows = (await sql`
+      UPDATE orders
+      SET payment_status = ${paymentStatus},
+          payment_id = ${paymentId ?? null}
+      WHERE id = ${id}
+      RETURNING id, created_at, status, payment_status, payment_id,
+                customer, items, subtotal, shipping, total
+    `) as OrderRow[];
+    return rows[0] ? rowToOrder(rows[0]) : null;
+  }
+  const orders = await readFileOrders();
+  const idx = orders.findIndex((o) => o.id === id);
+  if (idx === -1) return null;
+  orders[idx].paymentStatus = paymentStatus;
+  if (paymentId) orders[idx].paymentId = paymentId;
+  await writeFileOrders(orders);
+  return orders[idx];
 }
 
 /* ----------------------------- Kullanicilar ------------------------------ */
