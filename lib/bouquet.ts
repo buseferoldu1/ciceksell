@@ -90,8 +90,7 @@ export const FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/kazablanka-mix.jpg",
     note: "Yoğun kokulu lilyum",
     color: "#f7f3e8",
-    // Kazablanka icin ayri model yok; beyaz gul modeli temsili kullaniliyor
-    model: "/models/buket/gul-beyaz.glb",
+    model: "/models/buket/kazablanka.glb",
   },
   {
     id: "orkide",

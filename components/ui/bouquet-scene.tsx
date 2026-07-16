@@ -19,9 +19,18 @@ import { FLOWER_OPTIONS, WRAP_OPTIONS } from "@/lib/bouquet";
  *  - Ekranda en fazla MAX_GORUNUR dal cizilir (fazlasi fiyata dahildir ama
  *    sahneyi bogmaz).
  *  - Bolum gorunur degilken render dondurulur (frameloop="demand" + invalidate).
+ *
+ * Yerlesim mantigi:
+ *  Tum dallarin sap baslangici (bagli noktasi) TEK bir pivot noktasinda
+ *  birlesir; her dal sadece farkli bir yone (aci) ve farkli bir egimle
+ *  (tilt) o pivottan disari dogru acilir. Bu da gercek bir buket gibi
+ *  "elde tutulan tek nokta -> disari yelpaze acilan konik" gorunumu verir.
  */
 
 const MAX_GORUNUR = 24;
+
+/** Tum cicekler ayni buyuklukte gorunsun diye sabit hedef yukseklik */
+const CICEK_YUKSEKLIK = 0.44;
 
 /** Modeli hedef yukseklige olceklendirip merkezler */
 function normalize(obj: THREE.Object3D, hedefYukseklik: number) {
@@ -43,13 +52,11 @@ function normalize(obj: THREE.Object3D, hedefYukseklik: number) {
 
 function Cicek({
   url,
-  hedefYukseklik,
   position,
   rotationY,
   tilt,
 }: {
   url: string;
-  hedefYukseklik: number;
   position: [number, number, number];
   rotationY: number;
   tilt: number;
@@ -57,9 +64,9 @@ function Cicek({
   const { scene } = useGLTF(url);
   const klon = useMemo(() => {
     const c = scene.clone(true);
-    normalize(c, hedefYukseklik);
+    normalize(c, CICEK_YUKSEKLIK);
     return c;
-  }, [scene, hedefYukseklik]);
+  }, [scene]);
 
   return (
     <group position={position} rotation={[tilt, rotationY, 0]}>
@@ -78,19 +85,67 @@ function Kap({ url, hedefYukseklik }: { url: string; hedefYukseklik: number }) {
   return <primitive object={klon} />;
 }
 
-/** Ambalaj (vazo/kutu yoksa): basit koni seklinde kraft/luks sarma */
-function Ambalaj({ renk }: { renk: string }) {
+/**
+ * Kirisik/kagit gorunumlu buket sarma yuzeyi: tabanda (bagli nokta) tek
+ * noktaya kapanan, yukari dogru dallarin yayilimina uyarak acilan, ust
+ * kenari duzensiz/yirtik bir koni. Gercek bir koni gibi degil, elde
+ * sarilmis kagit gibi durmasi icin kenarlar ve yaricap acisal olarak
+ * dalgalandirilir.
+ */
+function kagitSarmaGeometry(yukseklik: number, ustYaricap: number, segman = 48) {
+  const geo = new THREE.BufferGeometry();
+  const pozisyonlar: number[] = [0, 0, 0]; // 0: bagli nokta (taban)
+
+  for (let i = 0; i <= segman; i++) {
+    const aci = (i / segman) * Math.PI * 2;
+    const kirisik = 1 + 0.07 * Math.sin(aci * 7 + 0.6) + 0.035 * Math.sin(aci * 13 + 1.4);
+    const r = ustYaricap * kirisik;
+    const yirtik = yukseklik + 0.045 * Math.sin(aci * 5 + 1.1) + 0.02 * Math.sin(aci * 11);
+    pozisyonlar.push(Math.cos(aci) * r, yirtik, Math.sin(aci) * r);
+  }
+
+  const indeksler: number[] = [];
+  for (let i = 0; i < segman; i++) {
+    const a = 0;
+    const b = 1 + i;
+    const c = 1 + i + 1;
+    indeksler.push(a, c, b);
+  }
+
+  geo.setIndex(indeksler);
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pozisyonlar, 3));
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function KagitSarma({ renk, yukseklik, ustYaricap }: { renk: string; yukseklik: number; ustYaricap: number }) {
+  const geo = useMemo(() => kagitSarmaGeometry(yukseklik, ustYaricap), [yukseklik, ustYaricap]);
   return (
-    <mesh position={[0, 0.28, 0]}>
-      <coneGeometry args={[0.42, 0.56, 24, 1, true]} />
+    <mesh geometry={geo}>
       <meshStandardMaterial
         color={renk}
         side={THREE.DoubleSide}
-        roughness={0.75}
-        metalness={0.05}
+        roughness={0.85}
+        metalness={0.02}
       />
     </mesh>
   );
+}
+
+/** Konteyner turune gore dallarin bagli noktasi, egim ve sarma boyutlari */
+function yerlesimAyarlari(kapId: string) {
+  switch (kapId) {
+    case "vazo":
+      // Vazonun agzinin hemen altindan baslar; sap ucu vazo icinde gizli
+      // kalir, tomurcuklar agizdan yukari tasar
+      return { pivotY: 0.5, tiltMax: 0.26, jitter: 0.02 };
+    case "kutu":
+      // Kutunun agzinin hemen altindan baslar
+      return { pivotY: 0.24, tiltMax: 0.22, jitter: 0.018 };
+    default:
+      // Kraft/luks kagit sarma: serbest, dogal yelpaze acilimi
+      return { pivotY: 0.07, tiltMax: 0.48, jitter: 0.014 };
+  }
 }
 
 /** Sahne icerigi — dallari buket seklinde yerlestirir */
@@ -108,7 +163,7 @@ function Sahne({
     if (grupRef.current) grupRef.current.rotation.y += delta * 0.15;
   });
 
-  // Dallari duz listeye ac ve spiral yerlesim hesapla
+  // Dallari duz listeye ac
   const dallar = useMemo(() => {
     const liste: { url: string; id: string }[] = [];
     Object.entries(stems).forEach(([id, adet]) => {
@@ -122,10 +177,7 @@ function Sahne({
   const kap = WRAP_OPTIONS.find((w) => w.id === wrapId) ?? WRAP_OPTIONS[0];
   const vazoda = kap.id === "vazo";
   const kutuda = kap.id === "kutu";
-
-  // Vazoda saplar daha yukaridan baslar
-  const tabanY = vazoda ? 0.62 : kutuda ? 0.34 : 0.4;
-  const cicekYukseklik = vazoda ? 0.5 : 0.42;
+  const { pivotY, tiltMax, jitter } = yerlesimAyarlari(kap.id);
 
   return (
     <>
@@ -138,24 +190,27 @@ function Sahne({
         {vazoda && <Kap url="/models/buket/vazo.glb" hedefYukseklik={0.7} />}
         {kutuda && <Kap url="/models/buket/hediye-kutusu.glb" hedefYukseklik={0.4} />}
         {!vazoda && !kutuda && (
-          <Ambalaj renk={kap.id === "luks" ? "#f6b6be" : "#c9b8a3"} />
+          <KagitSarma
+            renk={kap.id === "luks" ? "#f6b6be" : "#c9b8a3"}
+            yukseklik={0.4}
+            ustYaricap={0.3}
+          />
         )}
 
-        {/* Cicekler: altin acili spiral -> dogal buket dagilimi */}
+        {/* Cicekler: hepsinin sap baslangici ayni pivot noktasinda birlesir,
+            altin acili yonlerde disari dogru farkli egimlerle acilir. */}
         {dallar.map((d, i) => {
-          const t = dallar.length === 1 ? 0 : i / (dallar.length - 1);
-          const yaricap = 0.03 + Math.sqrt(t) * 0.3;
-          const aci = i * 2.399963; // altin aci
-          const x = Math.cos(aci) * yaricap;
-          const z = Math.sin(aci) * yaricap;
-          // Disa dogru gidenler daha cok yatar
-          const tilt = yaricap * 0.9;
+          const t = dallar.length <= 1 ? 0 : i / (dallar.length - 1);
+          const aci = i * 2.399963; // altin aci -> dengeli sag/sol dagilim
+          const tilt = 0.08 + Math.sqrt(t) * (tiltMax - 0.08);
+          // Bagli noktada hafif titresim: tam ust uste binmesin
+          const jx = Math.cos(aci) * jitter;
+          const jz = Math.sin(aci) * jitter;
           return (
             <Suspense key={d.id} fallback={null}>
               <Cicek
                 url={d.url}
-                hedefYukseklik={cicekYukseklik}
-                position={[x, tabanY, z]}
+                position={[jx, pivotY, jz]}
                 rotationY={aci}
                 tilt={tilt}
               />
@@ -222,7 +277,7 @@ export default function BouquetScene({
             enableZoom={false}
             minPolarAngle={Math.PI / 5}
             maxPolarAngle={Math.PI / 1.9}
-            target={[0, 0.55, 0]}
+            target={[0, 0.42, 0]}
           />
         </Canvas>
       )}
