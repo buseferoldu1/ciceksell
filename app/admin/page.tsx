@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
+  CalendarDays,
   Clock,
   Flower2,
   ImagePlus,
@@ -460,6 +461,16 @@ export default function AdminPage() {
                     <div className="mt-1 text-[#33323a]/60">
                       {o.customer.address}
                     </div>
+                    {o.customer.deliveryDate && (
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#d9594c]/10 px-2.5 py-1 text-xs font-semibold text-[#d9594c]">
+                        <CalendarDays className="h-3 w-3" />
+                        Teslimat:{" "}
+                        {new Date(o.customer.deliveryDate).toLocaleDateString(
+                          "tr-TR",
+                          { day: "numeric", month: "long", weekday: "long" }
+                        )}
+                      </div>
+                    )}
                     {o.customer.note && (
                       <div className="mt-2 rounded-lg bg-white px-3 py-2 text-xs italic text-[#33323a]/70">
                         Kart notu: “{o.customer.note}”

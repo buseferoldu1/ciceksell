@@ -21,6 +21,7 @@ import {
 import PetalBurst from "@/components/ui/petal-burst";
 import FallingPetals from "@/components/ui/falling-petals";
 import ProgressIndicator from "@/components/ui/progress-indicator";
+import GlassCalendar from "@/components/ui/glass-calendar";
 
 const ADIMLAR = ["Sepet", "Teslimat", "Ödeme", "Onay"];
 
@@ -65,6 +66,7 @@ export default function OdemePage() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [status, setStatus] = useState<"form" | "processing" | "success">("form");
   const [orderNo, setOrderNo] = useState("");
+  const [teslimatTarihi, setTeslimatTarihi] = useState<Date>(new Date());
 
   const shipping =
     subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
@@ -120,6 +122,8 @@ export default function OdemePage() {
             phone: form.phone,
             address: form.address,
             note: form.note || undefined,
+            // Musterinin sectigi teslimat tarihi (admin panelinde gorunur)
+            deliveryDate: teslimatTarihi.toISOString().slice(0, 10),
           },
           items: items.map((i) => ({
             id: i.id,
@@ -323,6 +327,17 @@ export default function OdemePage() {
                     value={form.note}
                     onChange={set("note")}
                     className={inputCls()}
+                  />
+                </div>
+
+                {/* Teslimat tarihi */}
+                <div className="sm:col-span-2">
+                  <label className="mb-2 block text-xs font-medium text-[#e5e2e3]/60">
+                    Teslimat Tarihi
+                  </label>
+                  <GlassCalendar
+                    selectedDate={teslimatTarihi}
+                    onDateSelect={setTeslimatTarihi}
                   />
                 </div>
               </div>

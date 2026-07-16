@@ -2,7 +2,6 @@ import Navbar from "@/components/ui/navbar";
 import BloomHero from "@/components/ui/bloom-hero";
 import Features from "@/components/ui/features";
 import CircularGallerySection from "@/components/ui/circular-gallery-section";
-import ModelShowcase from "@/components/ui/model-showcase";
 import About from "@/components/ui/about";
 import Yorumlar from "@/components/ui/testimonials-section";
 import Faq from "@/components/ui/faq";
@@ -16,18 +15,17 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const products = await getProducts();
-  const modelProducts = products.filter((p) => p.model);
 
   return (
     <main>
       <Navbar />
       <BloomHero products={products} />
-      {/* Aranjman Cemberi artik Neden Ciceksel'den once */}
       <CircularGallerySection products={products} />
-      <Features />
-      <ModelShowcase products={modelProducts} />
-      <About />
+      {/* Yorumlar ile Neden Ciceksel yer degistirdi */}
       <Yorumlar />
+      {/* 3D koleksiyon artik Atolye (/vitrin) sayfasinda */}
+      <About />
+      <Features />
       <Faq />
       <Contact />
       <Footer />

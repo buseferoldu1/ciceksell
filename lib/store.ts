@@ -54,6 +54,8 @@ export interface Order {
     phone: string;
     address: string;
     note?: string;
+    /** Musterinin sectigi teslimat tarihi (ISO, yyyy-MM-dd) */
+    deliveryDate?: string;
   };
   items: OrderItem[];
   subtotal: number;

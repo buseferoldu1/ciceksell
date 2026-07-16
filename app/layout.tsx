@@ -4,6 +4,7 @@ import { CartProvider } from "@/components/cart/cart-context";
 import CartDrawer from "@/components/cart/cart-drawer";
 import WhatsAppButton from "@/components/ui/whatsapp-button";
 import CiceksekDock from "@/components/ui/ciceksel-dock";
+import AiChatMount from "@/components/ui/ai-chat-mount";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,6 +35,7 @@ export default function RootLayout({
           {children}
           <CartDrawer />
           <CiceksekDock />
+          <AiChatMount />
           <WhatsAppButton />
         </CartProvider>
       </body>

@@ -40,6 +40,9 @@ export async function POST(req: Request) {
       phone: String(customer.phone),
       address: String(customer.address),
       note: customer.note ? String(customer.note) : undefined,
+      deliveryDate: customer.deliveryDate
+        ? String(customer.deliveryDate)
+        : undefined,
     },
     items: cleanItems,
     subtotal,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Flower2, Menu, Phone, Search, ShoppingBag, User, X } from "lucide-react";
+import { Menu, Phone, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import { SITE } from "@/lib/site";
 
@@ -36,17 +36,15 @@ export default function Navbar() {
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#33323a]/15">
-            <Flower2 className="h-5 w-5 text-[#d9594c]" />
-          </span>
-          <span className="flex flex-col leading-none">
-            <span className="font-serif text-2xl font-bold tracking-wide text-[#33323a]">
-              {SITE.name}
-            </span>
-            <span className="text-[10px] italic text-[#33323a]/45">
-              {SITE.tagline}
-            </span>
+        {/* Logo: gorselin kendisi zaten "Çiçeksel" yazisini iceriyor */}
+        <Link href="/" className="flex flex-col items-center leading-none">
+          <img
+            src="/logo.webp"
+            alt={SITE.name}
+            className="h-11 w-auto sm:h-12"
+          />
+          <span className="-mt-0.5 text-[10px] italic tracking-wide text-[#33323a]/45">
+            {SITE.tagline}
           </span>
         </Link>
 

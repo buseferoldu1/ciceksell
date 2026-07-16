@@ -3,9 +3,18 @@ import { ArrowLeft } from "lucide-react";
 import FractalBloomBackground from "@/components/ui/fractal-bloom-background";
 import FallingPetals from "@/components/ui/falling-petals";
 import InteractiveShowcase from "@/components/ui/interactive-showcase";
+import ModelShowcase from "@/components/ui/model-showcase";
+import BouquetBuilder from "@/components/ui/bouquet-builder";
 import RevealText from "@/components/ui/reveal-text";
+import { getProducts } from "@/lib/store";
 
-export default function VitrinPage() {
+// 3D urunler admin panelinden yonetilebildigi icin guncel veri okunur
+export const dynamic = "force-dynamic";
+
+export default async function VitrinPage() {
+  const products = await getProducts();
+  const modelProducts = products.filter((p) => p.model);
+
   return (
     <main className="relative min-h-screen bg-[#131314]">
       <FractalBloomBackground />
@@ -23,6 +32,12 @@ export default function VitrinPage() {
           <FallingPetals count={12} />
           <InteractiveShowcase />
         </div>
+
+        {/* 3D koleksiyon — ana sayfadan buraya tasindi */}
+        <ModelShowcase products={modelProducts} />
+
+        {/* Kendi buketini olustur */}
+        <BouquetBuilder />
 
         {/* Marka imza bandi — hover'da harflerin ardinda cicekler belirir */}
         <RevealText />
