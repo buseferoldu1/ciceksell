@@ -20,6 +20,9 @@ next-env.d.ts
 data/
 public/uploads/
 
+# Claude Code yerel ayarlari (makineye ozel izinler, commit edilmemeli)
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
