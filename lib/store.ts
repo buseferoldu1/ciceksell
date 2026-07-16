@@ -29,6 +29,9 @@ export type OrderStatus =
 /** Odeme durumu — iyzico ile online tahsilat icin. */
 export type PaymentStatus = "beklemede" | "odendi" | "basarisiz";
 
+/** Odeme yontemi: kredi/banka karti (iyzico), havale/EFT, kapida odeme. */
+export type PaymentMethod = "kart" | "havale" | "kapida";
+
 export interface OrderItem {
   id: string;
   name: string;
@@ -54,6 +57,8 @@ export interface Order {
   status: OrderStatus;
   /** Online odeme durumu. Eski/demo kayitlarda "odendi" varsayilir. */
   paymentStatus: PaymentStatus;
+  /** Odeme yontemi. Eski kayitlarda "kart" varsayilir. */
+  paymentMethod: PaymentMethod;
   /** iyzico tarafindan donen odeme kimligi (basarili tahsilatlarda). */
   paymentId?: string;
   customer: {
@@ -112,6 +117,7 @@ async function ensureSchema() {
       // (eski/demo siparisler), yeni online siparisler acikca "beklemede".
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'odendi'`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_id TEXT`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT NOT NULL DEFAULT 'kart'`;
       await sql`
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
@@ -283,6 +289,7 @@ type OrderRow = {
   created_at: string | Date;
   status: OrderStatus;
   payment_status: PaymentStatus;
+  payment_method: PaymentMethod;
   payment_id: string | null;
   customer: Order["customer"];
   items: OrderItem[];
@@ -297,6 +304,7 @@ function rowToOrder(r: OrderRow): Order {
     createdAt: new Date(r.created_at).toISOString(),
     status: r.status,
     paymentStatus: r.payment_status ?? "odendi",
+    paymentMethod: r.payment_method ?? "kart",
     ...(r.payment_id ? { paymentId: r.payment_id } : {}),
     customer: r.customer,
     items: r.items,
@@ -310,7 +318,7 @@ export async function getOrders(): Promise<Order[]> {
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      SELECT id, created_at, status, payment_status, payment_id,
+      SELECT id, created_at, status, payment_status, payment_method, payment_id,
              customer, items, subtotal, shipping, total
       FROM orders ORDER BY created_at DESC
     `) as OrderRow[];
@@ -323,7 +331,7 @@ export async function getOrderById(id: string): Promise<Order | null> {
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      SELECT id, created_at, status, payment_status, payment_id,
+      SELECT id, created_at, status, payment_status, payment_method, payment_id,
              customer, items, subtotal, shipping, total
       FROM orders WHERE id = ${id}
     `) as OrderRow[];
@@ -334,23 +342,28 @@ export async function getOrderById(id: string): Promise<Order | null> {
 }
 
 export async function addOrder(
-  data: Omit<Order, "id" | "createdAt" | "status" | "paymentStatus" | "paymentId"> & {
+  data: Omit<
+    Order,
+    "id" | "createdAt" | "status" | "paymentStatus" | "paymentMethod" | "paymentId"
+  > & {
     paymentStatus?: PaymentStatus;
+    paymentMethod?: PaymentMethod;
   }
 ): Promise<Order> {
   const id = `CS-${Date.now().toString().slice(-8)}`;
   const paymentStatus: PaymentStatus = data.paymentStatus ?? "odendi";
+  const paymentMethod: PaymentMethod = data.paymentMethod ?? "kart";
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      INSERT INTO orders (id, status, payment_status, customer, items, subtotal, shipping, total)
+      INSERT INTO orders (id, status, payment_status, payment_method, customer, items, subtotal, shipping, total)
       VALUES (
-        ${id}, 'yeni', ${paymentStatus},
+        ${id}, 'yeni', ${paymentStatus}, ${paymentMethod},
         ${JSON.stringify(data.customer)}::jsonb,
         ${JSON.stringify(data.items)}::jsonb,
         ${data.subtotal}, ${data.shipping}, ${data.total}
       )
-      RETURNING id, created_at, status, payment_status, payment_id,
+      RETURNING id, created_at, status, payment_status, payment_method, payment_id,
                 customer, items, subtotal, shipping, total
     `) as OrderRow[];
     return rowToOrder(rows[0]);
@@ -362,6 +375,7 @@ export async function addOrder(
     createdAt: new Date().toISOString(),
     status: "yeni",
     paymentStatus,
+    paymentMethod,
   };
   orders.unshift(order);
   await writeFileOrders(orders);
@@ -381,7 +395,7 @@ export async function setOrderPayment(
       SET payment_status = ${paymentStatus},
           payment_id = ${paymentId ?? null}
       WHERE id = ${id}
-      RETURNING id, created_at, status, payment_status, payment_id,
+      RETURNING id, created_at, status, payment_status, payment_method, payment_id,
                 customer, items, subtotal, shipping, total
     `) as OrderRow[];
     return rows[0] ? rowToOrder(rows[0]) : null;
@@ -487,7 +501,8 @@ export async function updateOrderStatus(
     await ensureSchema();
     const rows = (await sql`
       UPDATE orders SET status = ${status} WHERE id = ${id}
-      RETURNING id, created_at, status, customer, items, subtotal, shipping, total
+      RETURNING id, created_at, status, payment_status, payment_method, payment_id,
+                customer, items, subtotal, shipping, total
     `) as OrderRow[];
     return rows[0] ? rowToOrder(rows[0]) : null;
   }

@@ -40,3 +40,8 @@ public/uploads/
 
 .vercel
 .env*
+
+# Neon/agent skill artefaktlari (uygulamayla ilgisiz)
+.agents/
+.claude/skills/
+skills-lock.json

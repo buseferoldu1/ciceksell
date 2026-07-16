@@ -1,29 +1,51 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, XCircle, Clock } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Banknote,
+  Truck,
+  Copy,
+  Check,
+} from "lucide-react";
 import PetalBurst from "@/components/ui/petal-burst";
 import FallingPetals from "@/components/ui/falling-petals";
 import { useCart } from "@/components/cart/cart-context";
+import { formatPrice } from "@/lib/products";
+import { BANK, SITE } from "@/lib/site";
 
 export default function PaymentResult({
   durum,
   siparis,
+  tutar,
 }: {
   durum: string;
   siparis?: string;
+  tutar?: number;
 }) {
   const { clear } = useCart();
-  const basarili = durum === "basarili";
+  const [kopyalandi, setKopyalandi] = useState(false);
 
-  // Odeme basariliysa sepeti temizle (musteri geri dondugunde bos olsun)
+  // Siparis olustuysa (kart basarili / havale / kapida) sepeti temizle
+  const siparisOlustu =
+    durum === "basarili" || durum === "havale" || durum === "kapida";
   useEffect(() => {
-    if (basarili) clear();
-  }, [basarili, clear]);
+    if (siparisOlustu) clear();
+  }, [siparisOlustu, clear]);
 
-  if (basarili) {
+  const kopyala = (metin: string) => {
+    navigator.clipboard?.writeText(metin).then(() => {
+      setKopyalandi(true);
+      setTimeout(() => setKopyalandi(false), 2000);
+    });
+  };
+
+  // --- Kart odemesi basarili ---
+  if (durum === "basarili") {
     return (
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#131314] px-4 text-[#e5e2e3]">
         <PetalBurst />
@@ -34,20 +56,7 @@ export default function PaymentResult({
           transition={{ duration: 0.5 }}
           className="relative z-10 max-w-md text-center"
         >
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
-            className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15"
-          >
-            <motion.span
-              initial={{ scale: 0.8, opacity: 0.7 }}
-              animate={{ scale: [0.8, 1.8], opacity: [0.7, 0] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
-              className="absolute inset-0 rounded-full border-2 border-emerald-400/50"
-            />
-            <CheckCircle2 className="h-10 w-10 text-emerald-400" />
-          </motion.div>
+          <BasariHalkasi />
           <h1 className="font-serif text-3xl font-bold">Ödemeniz Alındı!</h1>
           <p className="mt-3 text-[#e5e2e3]/60">
             {siparis && (
@@ -58,19 +67,105 @@ export default function PaymentResult({
             )}
             Aranjmanınız özenle hazırlanıp en kısa sürede kapınızda olacak.
           </p>
-          <Link
-            href="/"
-            className="mt-8 inline-block rounded-full bg-[#f6b6be] px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3]"
-          >
-            Ana Sayfaya Dön
-          </Link>
+          <AnaSayfaButonu />
         </motion.div>
       </main>
     );
   }
 
-  const bekliyor = durum === "beklemede";
+  // --- Havale / EFT: IBAN bilgileri ---
+  if (durum === "havale") {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#131314] px-4 py-12 text-[#e5e2e3]">
+        <FallingPetals count={8} />
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10 w-full max-w-lg text-center"
+        >
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#f6b6be]/15">
+            <Banknote className="h-10 w-10 text-[#f6b6be]" />
+          </div>
+          <h1 className="font-serif text-3xl font-bold">Siparişiniz Alındı</h1>
+          <p className="mt-3 text-[#e5e2e3]/60">
+            Ödemeyi aşağıdaki hesaba yaptığınızda siparişiniz hazırlanmaya
+            başlar. Açıklama kısmına <strong>sipariş numaranızı</strong> yazmayı
+            unutmayın.
+          </p>
 
+          <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-left text-sm">
+            <Satir etiket="Alıcı" deger={BANK.holder} />
+            <Satir etiket="Banka" deger={BANK.bankName} />
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[11px] uppercase tracking-wider text-[#e5e2e3]/40">
+                  IBAN
+                </div>
+                <div className="truncate font-mono text-base font-semibold text-[#e5e2e3]">
+                  {BANK.iban}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => kopyala(BANK.iban)}
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-[#f6b6be]/40 px-3 py-1.5 text-xs font-semibold text-[#f6b6be] transition-colors hover:bg-[#f6b6be] hover:text-[#131314]"
+              >
+                {kopyalandi ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {kopyalandi ? "Kopyalandı" : "Kopyala"}
+              </button>
+            </div>
+            {siparis && (
+              <Satir etiket="Açıklama (sipariş no)" deger={siparis} vurgu />
+            )}
+            {typeof tutar === "number" && tutar > 0 && (
+              <Satir etiket="Tutar" deger={formatPrice(tutar)} vurgu />
+            )}
+          </div>
+
+          <p className="mt-4 text-xs text-[#e5e2e3]/40">
+            Sorularınız için {SITE.phone} numaralı hattımızdan bize
+            ulaşabilirsiniz.
+          </p>
+          <AnaSayfaButonu />
+        </motion.div>
+      </main>
+    );
+  }
+
+  // --- Kapida odeme ---
+  if (durum === "kapida") {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#131314] px-4 text-[#e5e2e3]">
+        <FallingPetals count={10} />
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10 max-w-md text-center"
+        >
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15">
+            <Truck className="h-10 w-10 text-emerald-400" />
+          </div>
+          <h1 className="font-serif text-3xl font-bold">Siparişiniz Alındı!</h1>
+          <p className="mt-3 text-[#e5e2e3]/60">
+            {siparis && (
+              <>
+                Sipariş numaranız{" "}
+                <span className="font-semibold text-[#f6b6be]">{siparis}</span>.{" "}
+              </>
+            )}
+            Ödemeyi teslimat sırasında yapacaksınız. Ekibimiz en kısa sürede
+            sizinle iletişime geçecek.
+          </p>
+          <AnaSayfaButonu />
+        </motion.div>
+      </main>
+    );
+  }
+
+  // --- Bekliyor / Basarisiz ---
+  const bekliyor = durum === "beklemede";
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#131314] px-4 text-[#e5e2e3]">
       <motion.div
@@ -114,5 +209,49 @@ export default function PaymentResult({
         </div>
       </motion.div>
     </main>
+  );
+}
+
+function Satir({ etiket, deger, vurgu }: { etiket: string; deger: string; vurgu?: boolean }) {
+  if (!deger) return null;
+  return (
+    <div>
+      <div className="text-[11px] uppercase tracking-wider text-[#e5e2e3]/40">
+        {etiket}
+      </div>
+      <div className={`font-semibold ${vurgu ? "text-[#f6b6be]" : "text-[#e5e2e3]"}`}>
+        {deger}
+      </div>
+    </div>
+  );
+}
+
+function BasariHalkasi() {
+  return (
+    <motion.div
+      initial={{ scale: 0, rotate: -180 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
+      className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15"
+    >
+      <motion.span
+        initial={{ scale: 0.8, opacity: 0.7 }}
+        animate={{ scale: [0.8, 1.8], opacity: [0.7, 0] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+        className="absolute inset-0 rounded-full border-2 border-emerald-400/50"
+      />
+      <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+    </motion.div>
+  );
+}
+
+function AnaSayfaButonu() {
+  return (
+    <Link
+      href="/"
+      className="mt-8 inline-block rounded-full bg-[#f6b6be] px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3]"
+    >
+      Ana Sayfaya Dön
+    </Link>
   );
 }

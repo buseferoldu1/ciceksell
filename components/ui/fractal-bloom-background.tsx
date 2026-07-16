@@ -13,10 +13,16 @@ export default function FractalBloomBackground() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Hareket azaltma tercihine saygi: animasyon yerine tek kare ciz
+    const reduceMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
     let animationFrameId: number;
     const mouse = { x: window.innerWidth / 2, y: window.innerHeight };
     let currentDepth = 0;
-    const maxDepth = 9;
+    // 2^depth dal cizildigi icin derinlik dusurmek maliyeti ustel azaltir
+    const maxDepth = 8;
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -51,7 +57,7 @@ export default function FractalBloomBackground() {
       drawBranch(endX, endY, angle + Math.PI / 10 + angleOffset, length * 0.8, depth + 1);
     };
 
-    const animate = () => {
+    const cizKare = () => {
       // Obsidyen zemin izini silme efekti
       ctx.fillStyle = "rgba(19, 19, 20, 0.16)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -62,10 +68,18 @@ export default function FractalBloomBackground() {
 
       drawBranch(startX, startY, -Math.PI / 2, startLength, 0);
 
-      if (currentDepth < maxDepth) {
-        currentDepth += 0.05;
-      }
+      if (currentDepth < maxDepth) currentDepth += 0.06;
+    };
+
+    // ~30 FPS'e sinirla (60'ta gereksiz CPU yakiyordu) + sekme gizliyken dur
+    const FRAME_MS = 1000 / 30;
+    let sonKare = 0;
+    const animate = (t: number) => {
       animationFrameId = requestAnimationFrame(animate);
+      if (document.hidden) return;
+      if (t - sonKare < FRAME_MS) return;
+      sonKare = t;
+      cizKare();
     };
 
     const handleMouseMove = (event: MouseEvent) => {
@@ -74,9 +88,16 @@ export default function FractalBloomBackground() {
     };
 
     window.addEventListener("resize", resizeCanvas);
-    window.addEventListener("mousemove", handleMouseMove);
     resizeCanvas();
-    animate();
+
+    if (reduceMotion) {
+      // Statik tek kare: agacin tam acilmis hali, animasyon yok
+      currentDepth = maxDepth;
+      cizKare();
+    } else {
+      window.addEventListener("mousemove", handleMouseMove);
+      animationFrameId = requestAnimationFrame(animate);
+    }
 
     return () => {
       cancelAnimationFrame(animationFrameId);

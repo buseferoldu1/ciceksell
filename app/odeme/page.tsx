@@ -3,18 +3,30 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Flower2, Loader2, Lock, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Banknote,
+  CreditCard,
+  Flower2,
+  Loader2,
+  Lock,
+  Truck,
+  ShieldCheck,
+} from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
 import {
   formatPrice,
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_FEE,
 } from "@/lib/products";
+import { BANKA_AKTIF } from "@/lib/site";
 import FallingPetals from "@/components/ui/falling-petals";
 import ProgressIndicator from "@/components/ui/progress-indicator";
 import GlassCalendar from "@/components/ui/glass-calendar";
 
 const ADIMLAR = ["Sepet", "Teslimat", "Ödeme"];
+
+type Yontem = "kart" | "havale" | "kapida";
 
 interface FormState {
   name: string;
@@ -37,6 +49,7 @@ const gecerliEposta = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 export default function OdemePage() {
   const { items, subtotal } = useCart();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [yontem, setYontem] = useState<Yontem>("kart");
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [status, setStatus] = useState<"form" | "processing">("form");
   const [genelHata, setGenelHata] = useState("");
@@ -46,10 +59,12 @@ export default function OdemePage() {
     subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + shipping;
 
+  // Kart odemesinde e-posta zorunlu (iyzico icin); digerlerinde opsiyonel
+  const epostaGerekli = yontem === "kart";
   const teslimatTamam =
     form.name.trim().length >= 3 &&
     form.phone.replace(/\D/g, "").length >= 10 &&
-    gecerliEposta(form.email) &&
+    (!epostaGerekli || gecerliEposta(form.email)) &&
     form.address.trim().length >= 10;
   const aktifAdim = teslimatTamam ? 2 : 1;
 
@@ -64,7 +79,8 @@ export default function OdemePage() {
     if (form.name.trim().length < 3) next.name = "Ad soyad girin";
     if (form.phone.replace(/\D/g, "").length < 10)
       next.phone = "Geçerli telefon girin";
-    if (!gecerliEposta(form.email)) next.email = "Geçerli e-posta girin";
+    if (epostaGerekli && !gecerliEposta(form.email))
+      next.email = "Geçerli e-posta girin";
     if (form.address.trim().length < 10) next.address = "Teslimat adresi girin";
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -75,37 +91,53 @@ export default function OdemePage() {
     setGenelHata("");
     if (!validate()) return;
     setStatus("processing");
+
+    const customer = {
+      name: form.name,
+      phone: form.phone,
+      email: form.email || undefined,
+      address: form.address,
+      note: form.note || undefined,
+      deliveryDate: teslimatTarihi.toISOString().slice(0, 10),
+    };
+    const cartItems = items.map((i) => ({
+      id: i.id,
+      name: i.name,
+      price: i.price,
+      qty: i.qty,
+    }));
+
     try {
-      const res = await fetch("/api/payment/init", {
+      if (yontem === "kart") {
+        const res = await fetch("/api/payment/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customer, items: cartItems }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.paymentPageUrl) {
+          throw new Error(data?.error || "Ödeme başlatılamadı");
+        }
+        window.location.href = data.paymentPageUrl;
+        return;
+      }
+
+      // Havale/EFT veya Kapida odeme: siparisi olustur, sonuc sayfasina git
+      const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer: {
-            name: form.name,
-            phone: form.phone,
-            email: form.email,
-            address: form.address,
-            note: form.note || undefined,
-            deliveryDate: teslimatTarihi.toISOString().slice(0, 10),
-          },
-          items: items.map((i) => ({
-            id: i.id,
-            name: i.name,
-            price: i.price,
-            qty: i.qty,
-          })),
-        }),
+        body: JSON.stringify({ customer, items: cartItems, paymentMethod: yontem }),
       });
       const data = await res.json();
-      if (!res.ok || !data?.paymentPageUrl) {
-        throw new Error(data?.error || "Ödeme başlatılamadı");
+      if (!res.ok || !data?.id) {
+        throw new Error(data?.error || "Sipariş oluşturulamadı");
       }
-      // iyzico'nun guvenli odeme sayfasina yonlendir
-      window.location.href = data.paymentPageUrl;
+      const durum = yontem === "havale" ? "havale" : "kapida";
+      window.location.href = `/odeme/sonuc?durum=${durum}&siparis=${data.id}&tutar=${total}`;
     } catch (err) {
       setStatus("form");
       setGenelHata(
-        err instanceof Error ? err.message : "Ödeme başlatılamadı, tekrar deneyin"
+        err instanceof Error ? err.message : "İşlem tamamlanamadı, tekrar deneyin"
       );
     }
   };
@@ -151,6 +183,21 @@ export default function OdemePage() {
     );
   }
 
+  const yontemler: { id: Yontem; label: string; not: string; Icon: typeof CreditCard }[] = [
+    { id: "kart", label: "Kredi / Banka Kartı", not: "iyzico ile güvenli, 3D Secure", Icon: CreditCard },
+    ...(BANKA_AKTIF
+      ? [{ id: "havale" as Yontem, label: "Havale / EFT", not: "IBAN'a transfer, onay sonrası hazırlanır", Icon: Banknote }]
+      : []),
+    { id: "kapida", label: "Kapıda Ödeme", not: "Teslimatta nakit veya kart", Icon: Truck },
+  ];
+
+  const butonMetni =
+    yontem === "kart"
+      ? `${formatPrice(total)} · Güvenli Ödemeye Geç`
+      : yontem === "havale"
+        ? "Siparişi Oluştur · Havale Bilgileri"
+        : "Siparişi Tamamla · Kapıda Öde";
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#131314] text-[#e5e2e3]">
       <FallingPetals count={8} />
@@ -183,7 +230,6 @@ export default function OdemePage() {
         </motion.div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
-          {/* Sol: teslimat formu */}
           <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -221,7 +267,11 @@ export default function OdemePage() {
                 </div>
                 <div className="sm:col-span-2">
                   <input
-                    placeholder="E-posta (sipariş bilgilendirmesi için)"
+                    placeholder={
+                      epostaGerekli
+                        ? "E-posta (ödeme için gerekli)"
+                        : "E-posta (isteğe bağlı)"
+                    }
                     value={form.email}
                     onChange={set("email")}
                     inputMode="email"
@@ -264,27 +314,67 @@ export default function OdemePage() {
               </div>
             </section>
 
+            {/* Odeme yontemi secimi */}
             <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-serif text-xl font-bold">
-                  <ShieldCheck className="h-5 w-5 text-[#f6b6be]" />
-                  Güvenli Ödeme
-                </h2>
-                <span className="flex items-center gap-1 text-xs text-[#e5e2e3]/40">
-                  <Lock className="h-3 w-3" />
-                  iyzico · 3D Secure
-                </span>
+              <h2 className="mb-4 font-serif text-xl font-bold">Ödeme Yöntemi</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {yontemler.map(({ id, label, not, Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setYontem(id);
+                      setGenelHata("");
+                    }}
+                    className={`flex flex-col items-start gap-1.5 rounded-xl border p-4 text-left transition-colors ${
+                      yontem === id
+                        ? "border-[#f6b6be]/60 bg-[#f6b6be]/[0.07]"
+                        : "border-white/10 bg-white/[0.02] hover:border-white/25"
+                    }`}
+                  >
+                    <Icon
+                      className={`h-5 w-5 ${
+                        yontem === id ? "text-[#f6b6be]" : "text-[#e5e2e3]/50"
+                      }`}
+                    />
+                    <span className="text-sm font-semibold text-[#e5e2e3]">
+                      {label}
+                    </span>
+                    <span className="text-[11px] leading-snug text-[#e5e2e3]/45">
+                      {not}
+                    </span>
+                  </button>
+                ))}
               </div>
 
-              <p className="mb-5 rounded-lg border border-[#f6b6be]/15 bg-[#f6b6be]/[0.05] px-4 py-3 text-xs leading-relaxed text-[#e5e2e3]/70">
-                “Güvenli Ödemeye Geç” dediğinizde iyzico’nun güvenli ödeme
-                sayfasına yönlendirilirsiniz. Kart bilgileriniz{" "}
-                <strong>yalnızca iyzico</strong> tarafından işlenir, bizim
-                sistemimizde saklanmaz.
-              </p>
+              {/* Yonteme ozel bilgilendirme */}
+              <div className="mt-5">
+                {yontem === "kart" && (
+                  <p className="flex items-start gap-2 rounded-lg border border-[#f6b6be]/15 bg-[#f6b6be]/[0.05] px-4 py-3 text-xs leading-relaxed text-[#e5e2e3]/70">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#f6b6be]" />
+                    iyzico’nun güvenli ödeme sayfasına yönlendirilirsiniz. Kart
+                    bilgileriniz yalnızca iyzico tarafından işlenir, bizde
+                    saklanmaz.
+                  </p>
+                )}
+                {yontem === "havale" && (
+                  <p className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-xs leading-relaxed text-[#e5e2e3]/70">
+                    <Banknote className="mt-0.5 h-4 w-4 shrink-0 text-[#f6b6be]" />
+                    Siparişi oluşturduğunuzda IBAN bilgilerimiz görüntülenir.
+                    Ödemeniz hesabımıza geçtikten sonra siparişiniz hazırlanır.
+                  </p>
+                )}
+                {yontem === "kapida" && (
+                  <p className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-xs leading-relaxed text-[#e5e2e3]/70">
+                    <Truck className="mt-0.5 h-4 w-4 shrink-0 text-[#f6b6be]" />
+                    Ödemeyi teslimat sırasında nakit veya kartla
+                    yapabilirsiniz. Siparişiniz onaylandıktan sonra hazırlanır.
+                  </p>
+                )}
+              </div>
 
               {genelHata && (
-                <p className="mb-4 rounded-lg border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                <p className="mt-4 rounded-lg border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
                   {genelHata}
                 </p>
               )}
@@ -294,7 +384,7 @@ export default function OdemePage() {
                 disabled={status === "processing"}
                 whileHover={status === "form" ? { scale: 1.02 } : undefined}
                 whileTap={status === "form" ? { scale: 0.98 } : undefined}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#f6b6be] py-4 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3] disabled:opacity-70"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[#f6b6be] py-4 text-xs font-semibold uppercase tracking-widest text-[#131314] transition-colors hover:bg-[#f9cdd3] disabled:opacity-70"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {status === "processing" ? (
@@ -306,7 +396,7 @@ export default function OdemePage() {
                       className="flex items-center gap-2"
                     >
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Yönlendiriliyor...
+                      {yontem === "kart" ? "Yönlendiriliyor..." : "İşleniyor..."}
                     </motion.span>
                   ) : (
                     <motion.span
@@ -317,7 +407,7 @@ export default function OdemePage() {
                       className="flex items-center gap-2"
                     >
                       <Lock className="h-3.5 w-3.5" />
-                      {formatPrice(total)} · Güvenli Ödemeye Geç
+                      {butonMetni}
                     </motion.span>
                   )}
                 </AnimatePresence>

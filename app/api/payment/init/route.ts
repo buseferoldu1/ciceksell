@@ -90,6 +90,7 @@ export async function POST(req: Request) {
     shipping,
     total,
     paymentStatus: "beklemede",
+    paymentMethod: "kart",
   });
 
   // iyzico sepet kalemleri: her satir = birim fiyat * adet. Kargo varsa

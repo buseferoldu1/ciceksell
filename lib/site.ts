@@ -26,6 +26,19 @@ export const SITE = {
   ],
 } as const;
 
+/**
+ * Havale/EFT icin banka hesap bilgisi. `iban` bos birakilirsa odeme
+ * sayfasinda Havale/EFT secenegi otomatik gizlenir (yanlis IBAN'a para
+ * gonderilmesini onlemek icin). IBAN alinca burayi doldurmak yeterli.
+ */
+export const BANK = {
+  holder: "", // Hesap sahibi (orn. "Etem Çiçekçilik" veya sahibin adi)
+  iban: "", // "TR.." ile baslayan 26 haneli IBAN
+  bankName: "", // Banka adi (orn. "Ziraat Bankası")
+} as const;
+
+export const BANKA_AKTIF = BANK.iban.trim().length > 0;
+
 export const ABOUT_INTRO =
   "1984'ten bu yana Ankara'nın kalbinde, her duyguya en güzel çiçekle eşlik ediyoruz.";
 

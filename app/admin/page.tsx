@@ -23,7 +23,12 @@ import {
 import { formatPrice, type Product } from "@/lib/products";
 import AdminLogin from "@/components/ui/admin-login";
 import { StatsCard } from "@/components/ui/stats-card-1";
-import type { Order, OrderStatus, PaymentStatus } from "@/lib/store";
+import type {
+  Order,
+  OrderStatus,
+  PaymentStatus,
+  PaymentMethod,
+} from "@/lib/store";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   yeni: "Yeni",
@@ -51,6 +56,12 @@ const PAYMENT_COLORS: Record<PaymentStatus, string> = {
   odendi: "bg-emerald-100 text-emerald-700",
   beklemede: "bg-amber-100 text-amber-700",
   basarisiz: "bg-red-100 text-red-700",
+};
+
+const METHOD_LABELS: Record<PaymentMethod, string> = {
+  kart: "Kart",
+  havale: "Havale/EFT",
+  kapida: "Kapıda",
 };
 
 interface ProductForm {
@@ -179,6 +190,43 @@ export default function AdminPage() {
       }
       setActionError(
         err instanceof Error ? err.message : "Durum güncellenemedi"
+      );
+    }
+  };
+
+  // Havale/kapida siparislerinde odeme durumunu degistirir (orn. onaylama)
+  const setPaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
+    const previous = orders.find((o) => o.id === id)?.paymentStatus;
+    setActionError("");
+    setOrders((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, paymentStatus } : o))
+    );
+    try {
+      const res = await authedFetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentStatus }),
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          sessionStorage.removeItem("ciceksel-admin-key");
+          setKey(null);
+          setLoginError("Oturum süresi doldu, tekrar giriş yapın");
+          throw new Error("Oturum süresi doldu, tekrar giriş yapın");
+        }
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? `Ödeme güncellenemedi (${res.status})`);
+      }
+      const updated = await res.json();
+      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    } catch (err) {
+      if (previous) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, paymentStatus: previous } : o))
+        );
+      }
+      setActionError(
+        err instanceof Error ? err.message : "Ödeme güncellenemedi"
       );
     }
   };
@@ -451,6 +499,19 @@ export default function AdminPage() {
                       >
                         {PAYMENT_LABELS[o.paymentStatus]}
                       </span>
+                      <span className="rounded-full bg-black/5 px-2.5 py-0.5 text-xs font-semibold text-[#33323a]/70">
+                        {METHOD_LABELS[o.paymentMethod]}
+                      </span>
+                      {o.paymentStatus === "beklemede" &&
+                        o.paymentMethod !== "kart" && (
+                          <button
+                            type="button"
+                            onClick={() => setPaymentStatus(o.id, "odendi")}
+                            className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+                          >
+                            Ödemeyi Onayla
+                          </button>
+                        )}
                     </div>
                     <div className="mt-1 text-xs text-[#33323a]/50">
                       {new Date(o.createdAt).toLocaleString("tr-TR")}
