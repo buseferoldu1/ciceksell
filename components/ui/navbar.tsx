@@ -10,7 +10,7 @@ import { useContactSettings } from "@/components/site-settings-context";
 
 const NAV_LINKS = [
   { href: "/katalog", label: "Katalog" },
-  { href: "/vitrin", label: "Atölye (3D)" },
+  { href: "/vitrin", label: "Kendi Buketini Oluştur" },
   { href: "/#hakkimizda", label: "Hakkımızda" },
   { href: "/#iletisim", label: "İletişim" },
 ];

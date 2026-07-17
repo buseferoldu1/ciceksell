@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Flower2, ShoppingBag, Sparkles } from "lucide-react";
 import { CATALOG, formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/components/cart/cart-context";
 import FallingPetals from "./falling-petals";
@@ -116,6 +116,23 @@ export default function BloomHero({ products }: { products?: Product[] }) {
                   </motion.div>
                 </Magnetic>
               </div>
+
+              {/* Kendi Buketini Olustur'a dikkat cekmek icin ayri, belirgin CTA */}
+              <Magnetic>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="mt-4 inline-block"
+                >
+                  <Link
+                    href="/vitrin#buket-olustur"
+                    className="flex items-center gap-2 rounded-full border-2 border-dashed border-[#d9594c]/50 bg-[#d9594c]/5 px-7 py-3 text-sm font-semibold text-[#d9594c] transition-colors hover:bg-[#d9594c]/10"
+                  >
+                    <Flower2 className="h-4 w-4" />
+                    Kendi Buketini Oluştur
+                  </Link>
+                </motion.div>
+              </Magnetic>
             </motion.div>
           </AnimatePresence>
         </div>

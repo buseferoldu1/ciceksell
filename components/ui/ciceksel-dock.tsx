@@ -25,7 +25,7 @@ export default function CiceksekDock() {
   const items = [
     { title: "Ana Sayfa", icon: HomeIcon, href: "/" },
     { title: "Katalog", icon: Flower2, href: "/katalog" },
-    { title: "Atölye (3D)", icon: Boxes, href: "/vitrin" },
+    { title: "Kendi Buketini Oluştur", icon: Boxes, href: "/vitrin" },
     { title: "Hakkımızda", icon: Mail, href: "/#hakkimizda" },
     { title: "İletişim", icon: Phone, href: "/#iletisim" },
   ];
