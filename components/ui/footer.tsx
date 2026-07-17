@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Flower2, Mail, MapPin, Phone } from "lucide-react";
-import { SITE } from "@/lib/site";
+import { SITE_BRAND, contactHrefs } from "@/lib/site";
+import { getContactSettings } from "@/lib/store";
 import { InstagramIcon } from "./icons";
 
 const QUICK_LINKS = [
@@ -10,7 +11,9 @@ const QUICK_LINKS = [
   { href: "/#iletisim", label: "İletişim" },
 ];
 
-export default function Footer() {
+export default async function Footer() {
+  const contact = await getContactSettings();
+  const { phoneHref, emailHref } = contactHrefs(contact);
   return (
     <footer className="bg-[#33323a] px-4 py-16 text-white/70 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
@@ -20,11 +23,11 @@ export default function Footer() {
             <div className="mb-1 flex items-center gap-2">
               <Flower2 className="h-6 w-6 text-white" />
               <span className="font-serif text-xl font-bold text-white">
-                {SITE.name}
+                {SITE_BRAND.name}
               </span>
             </div>
-            <span className="text-xs italic text-white/45">{SITE.tagline}</span>
-            <p className="mt-3 text-sm text-white/65">{SITE.description}</p>
+            <span className="text-xs italic text-white/45">{SITE_BRAND.tagline}</span>
+            <p className="mt-3 text-sm text-white/65">{SITE_BRAND.description}</p>
           </div>
 
           {/* Hizli linkler */}
@@ -50,35 +53,35 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-white/65">
               <li>
                 <a
-                  href={SITE.phoneHref}
+                  href={phoneHref}
                   className="flex items-center gap-2 transition-colors hover:text-white"
                 >
                   <Phone className="h-4 w-4 shrink-0" />
-                  <span>{SITE.phone}</span>
+                  <span>{contact.phone}</span>
                 </a>
               </li>
               <li>
                 <a
-                  href={SITE.emailHref}
+                  href={emailHref}
                   className="flex items-center gap-2 transition-colors hover:text-white"
                 >
                   <Mail className="h-4 w-4 shrink-0" />
-                  <span>{SITE.email}</span>
+                  <span>{contact.email}</span>
                 </a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{SITE.address.short}</span>
+                <span>{contact.addressShort}</span>
               </li>
               <li>
                 <a
-                  href={SITE.instagram}
+                  href={contact.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 transition-colors hover:text-white"
                 >
                   <InstagramIcon className="h-4 w-4 shrink-0" />
-                  <span>{SITE.instagramHandle}</span>
+                  <span>{contact.instagramHandle}</span>
                 </a>
               </li>
             </ul>
@@ -90,7 +93,7 @@ export default function Footer() {
               Güvenli Ödeme
             </h3>
             <div className="flex flex-wrap gap-2">
-              {SITE.payment.map((p) => (
+              {SITE_BRAND.payment.map((p) => (
                 <span
                   key={p}
                   className="rounded-md bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80"
@@ -104,7 +107,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-white/45 sm:flex-row">
           <span>
-            © {new Date().getFullYear()} {SITE.name}. Tüm hakları saklıdır.
+            © {new Date().getFullYear()} {SITE_BRAND.name}. Tüm hakları saklıdır.
           </span>
         </div>
       </div>

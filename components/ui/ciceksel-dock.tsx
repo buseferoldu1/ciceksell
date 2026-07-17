@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { Dock, DockIcon, DockItem, DockLabel } from "./dock";
 import { useCart } from "@/components/cart/cart-context";
-import { SITE } from "@/lib/site";
 
 /**
  * Ciceksel navigasyon dock'u — sayfanin altinda sabit durur.

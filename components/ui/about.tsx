@@ -2,7 +2,7 @@
 
 import { motion, type Variants } from "framer-motion";
 import { Flower2 } from "lucide-react";
-import { ABOUT_INTRO, ABOUT_SECTIONS, ABOUT_STATS, SITE } from "@/lib/site";
+import { ABOUT_INTRO, ABOUT_SECTIONS, ABOUT_STATS, SITE_BRAND } from "@/lib/site";
 
 const containerVariants: Variants = {
   hidden: {},
@@ -32,7 +32,7 @@ export default function About() {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-[#d9594c]/25 bg-[#d9594c]/10 px-4 py-1.5 text-sm font-medium text-[#d9594c]">
             <Flower2 className="h-4 w-4" />
-            {SITE.tagline}
+            {SITE_BRAND.tagline}
           </span>
           <h2 className="mt-5 font-serif text-3xl font-bold text-[#33323a] md:text-4xl">
             Hakkımızda

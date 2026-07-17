@@ -15,7 +15,9 @@ import {
   Package,
   Pencil,
   Plus,
+  Settings,
   ShoppingBag,
+  Sparkles,
   Trash2,
   Wallet,
   X,
@@ -23,6 +25,9 @@ import {
 import { formatPrice, type Product } from "@/lib/products";
 import AdminLogin from "@/components/ui/admin-login";
 import { StatsCard } from "@/components/ui/stats-card-1";
+import { gorseliHazirla } from "@/lib/client-image";
+import AdminSettingsTab from "@/components/ui/admin-settings-tab";
+import AdminWorkshopTab from "@/components/ui/admin-workshop-tab";
 import type {
   Order,
   OrderStatus,
@@ -73,52 +78,15 @@ interface ProductForm {
 
 const EMPTY_PRODUCT: ProductForm = { name: "", tag: "", price: "", image: "" };
 
-/**
- * Yuklemeden once fotografi tarayicida JPEG'e cevirip kucultur.
- *
- * Neden gerekli: telefon galerisinden secilen fotograflar (ozellikle
- * iPhone) genellikle HEIC formatinda gelir; sunucu bu formati kabul
- * etmiyordu ve yukleme sessizce basarisiz oluyordu. `createImageBitmap`
- * tarayicinin kendi kod cozucusunu kullandigi icin HEIC dahil hemen
- * hemen her formati acabilir; canvas'a cizip JPEG olarak yeniden
- * kodlamak hem format sorununu hem de telefon kameralarinin urettigi
- * cok buyuk dosya boyutunu (mobil baglantida zaman asimina yol acabilir)
- * cozer. Tarayici cozemezse (nadir), dosya oldugu gibi gonderilir.
- */
-async function gorseliHazirla(file: File): Promise<File> {
-  if (typeof createImageBitmap === "undefined") return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const MAX_KENAR = 1600;
-    const olcek = Math.min(1, MAX_KENAR / Math.max(bitmap.width, bitmap.height));
-    const w = Math.max(1, Math.round(bitmap.width * olcek));
-    const h = Math.max(1, Math.round(bitmap.height * olcek));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close();
-
-    const blob: Blob | null = await new Promise((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", 0.85)
-    );
-    if (!blob) return file;
-    return new File([blob], "urun.jpg", { type: "image/jpeg" });
-  } catch {
-    return file;
-  }
-}
-
 export default function AdminPage() {
   const [key, setKey] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   // Durum/silme gibi islemlerde olusan hatalar (onceden sessizce yutuluyordu)
   const [actionError, setActionError] = useState("");
-  const [tab, setTab] = useState<"siparisler" | "urunler">("siparisler");
+  const [tab, setTab] = useState<
+    "siparisler" | "urunler" | "atolye" | "ayarlar"
+  >("siparisler");
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -402,6 +370,8 @@ export default function AdminPage() {
             [
               ["siparisler", "Siparişler", ShoppingBag, orders.length],
               ["urunler", "Ürünler", Package, products.length],
+              ["atolye", "Atölye", Sparkles, null],
+              ["ayarlar", "Site Ayarları", Settings, null],
             ] as const
           ).map(([k, label, Icon, count]) => (
             <button
@@ -414,9 +384,11 @@ export default function AdminPage() {
             >
               <Icon className="h-4 w-4" />
               {label}
-              <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs">
-                {count}
-              </span>
+              {count !== null && (
+                <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs">
+                  {count}
+                </span>
+              )}
               {tab === k && (
                 <motion.span
                   layoutId="admin-tab"
@@ -691,6 +663,30 @@ export default function AdminPage() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* ---------- Atolye icerigi ---------- */}
+        {!loading && tab === "atolye" && (
+          <AdminWorkshopTab
+            authedFetch={authedFetch}
+            onUnauthorized={() => {
+              sessionStorage.removeItem("ciceksel-admin-key");
+              setKey(null);
+              setLoginError("Oturum süresi doldu, tekrar giriş yapın");
+            }}
+          />
+        )}
+
+        {/* ---------- Site ayarlari ---------- */}
+        {!loading && tab === "ayarlar" && (
+          <AdminSettingsTab
+            authedFetch={authedFetch}
+            onUnauthorized={() => {
+              sessionStorage.removeItem("ciceksel-admin-key");
+              setKey(null);
+              setLoginError("Oturum süresi doldu, tekrar giriş yapın");
+            }}
+          />
         )}
       </div>
 

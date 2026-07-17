@@ -4,7 +4,11 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { FLOWER_OPTIONS, WRAP_OPTIONS } from "@/lib/bouquet";
+import {
+  DEFAULT_FLOWER_OPTIONS,
+  WRAP_OPTIONS,
+  type FlowerOption,
+} from "@/lib/bouquet";
 
 /**
  * Buketin canli 3D onizlemesi.
@@ -300,9 +304,11 @@ function sayiOlcegi(toplamDal: number) {
 function Sahne({
   stems,
   wrapId,
+  flowers,
 }: {
   stems: Record<string, number>;
   wrapId: string;
+  flowers: FlowerOption[];
 }) {
   const grupRef = useRef<THREE.Group>(null);
 
@@ -316,7 +322,7 @@ function Sahne({
   // her tur genel yayilima esit oranda dagilir.
   const dallar = useMemo(() => {
     const gruplar = Object.entries(stems)
-      .map(([id, adet]) => ({ f: FLOWER_OPTIONS.find((x) => x.id === id), adet }))
+      .map(([id, adet]) => ({ f: flowers.find((x) => x.id === id), adet }))
       .filter((g): g is { f: NonNullable<typeof g.f>; adet: number } => !!g.f?.model && g.adet > 0);
 
     const liste: { url: string; id: string }[] = [];
@@ -336,7 +342,7 @@ function Sahne({
       k = (k + 1) % gruplar.length;
     }
     return liste;
-  }, [stems]);
+  }, [stems, flowers]);
 
   const toplamDal = useMemo(
     () => Object.values(stems).reduce((s, n) => s + n, 0),
@@ -406,10 +412,12 @@ function Sahne({
 export default function BouquetScene({
   stems,
   wrapId,
+  flowers = DEFAULT_FLOWER_OPTIONS,
   className = "",
 }: {
   stems: Record<string, number>;
   wrapId: string;
+  flowers?: FlowerOption[];
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -449,7 +457,7 @@ export default function BouquetScene({
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
-            <Sahne stems={stems} wrapId={wrapId} />
+            <Sahne stems={stems} wrapId={wrapId} flowers={flowers} />
           </Suspense>
           <OrbitControls
             enablePan={false}
@@ -470,6 +478,6 @@ export default function BouquetScene({
 }
 
 // GLB'leri onceden yukle (ilk etkilesim akici olsun)
-FLOWER_OPTIONS.forEach((f) => f.model && useGLTF.preload(f.model));
+DEFAULT_FLOWER_OPTIONS.forEach((f) => f.model && useGLTF.preload(f.model));
 useGLTF.preload("/models/buket/vazo.glb");
 useGLTF.preload("/models/buket/hediye-kutusu.glb");

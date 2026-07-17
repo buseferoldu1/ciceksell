@@ -5,6 +5,8 @@ import CartDrawer from "@/components/cart/cart-drawer";
 import WhatsAppButton from "@/components/ui/whatsapp-button";
 import CiceksekDock from "@/components/ui/ciceksel-dock";
 import AiChatMount from "@/components/ui/ai-chat-mount";
+import { SiteSettingsProvider } from "@/components/site-settings-context";
+import { getContactSettings } from "@/lib/store";
 import "./globals.css";
 
 const inter = Inter({
@@ -23,21 +25,28 @@ export const metadata: Metadata = {
     "Sevdiklerinize doğanın zarafetini hediye edin. Aynı gün teslimat seçeneğiyle, en taze aranjmanlar kapınızda.",
 };
 
-export default function RootLayout({
+// Iletisim/banka ayarlari admin panelinden yonetilebildigi icin her
+// istekte guncel veri okunur.
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const contact = await getContactSettings();
   return (
     <html lang="tr">
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
-        <CartProvider>
-          {children}
-          <CartDrawer />
-          <CiceksekDock />
-          <AiChatMount />
-          <WhatsAppButton />
-        </CartProvider>
+        <SiteSettingsProvider value={contact}>
+          <CartProvider>
+            {children}
+            <CartDrawer />
+            <CiceksekDock />
+            <AiChatMount />
+            <WhatsAppButton />
+          </CartProvider>
+        </SiteSettingsProvider>
       </body>
     </html>
   );

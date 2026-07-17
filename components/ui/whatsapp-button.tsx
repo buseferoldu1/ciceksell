@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { SITE } from "@/lib/site";
+import { useContactSettings } from "@/components/site-settings-context";
 
 /** WhatsApp marka ikonu (lucide-react bu surumde marka logolarini icermiyor) */
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -17,10 +17,11 @@ function WhatsAppIcon({ className }: { className?: string }) {
  * Tiklayinca hazir mesajla WhatsApp sohbetini acar.
  */
 export default function WhatsAppButton() {
+  const contact = useContactSettings();
   const mesaj = encodeURIComponent(
     "Merhaba! Çiçeksel'den bilgi almak istiyorum."
   );
-  const numara = SITE.phone.replace(/\D/g, ""); // 905357339333
+  const numara = contact.phone.replace(/\D/g, ""); // 905357339333
   const href = `https://wa.me/${numara}?text=${mesaj}`;
 
   return (

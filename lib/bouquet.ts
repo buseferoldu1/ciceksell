@@ -28,7 +28,12 @@ export interface WrapOption {
   note: string;
 }
 
-export const FLOWER_OPTIONS: FlowerOption[] = [
+/**
+ * Varsayilan cicek listesi. Admin panelinden duzenlenen guncel liste
+ * `getBouquetFlowers()` ile (store.ts uzerinden) okunur; bu dizi yalnizca
+ * hic ozellestirme yapilmamissa kullanilan baslangic degeridir.
+ */
+export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
   {
     id: "kirmizi-gul",
     name: "Kırmızı Gül",
@@ -119,10 +124,13 @@ export interface BouquetSelection {
   wrapId: string;
 }
 
-export function bouquetTotals(sel: BouquetSelection) {
+export function bouquetTotals(
+  sel: BouquetSelection,
+  flowers: FlowerOption[] = DEFAULT_FLOWER_OPTIONS
+) {
   const stemCount = Object.values(sel.stems).reduce((s, n) => s + n, 0);
   const flowersPrice = Object.entries(sel.stems).reduce((sum, [id, n]) => {
-    const f = FLOWER_OPTIONS.find((x) => x.id === id);
+    const f = flowers.find((x) => x.id === id);
     return sum + (f ? f.price * n : 0);
   }, 0);
   const wrap = WRAP_OPTIONS.find((w) => w.id === sel.wrapId) ?? WRAP_OPTIONS[0];
@@ -137,14 +145,23 @@ export function bouquetTotals(sel: BouquetSelection) {
 }
 
 /** Sepette ve siparis ozetinde gorunecek aciklama */
-export function bouquetDescription(sel: BouquetSelection): string {
+export function bouquetDescription(
+  sel: BouquetSelection,
+  flowers: FlowerOption[] = DEFAULT_FLOWER_OPTIONS
+): string {
   const parcalar = Object.entries(sel.stems)
     .filter(([, n]) => n > 0)
     .map(([id, n]) => {
-      const f = FLOWER_OPTIONS.find((x) => x.id === id);
+      const f = flowers.find((x) => x.id === id);
       return f ? `${n} ${f.name}` : null;
     })
     .filter(Boolean);
   const wrap = WRAP_OPTIONS.find((w) => w.id === sel.wrapId) ?? WRAP_OPTIONS[0];
   return `${parcalar.join(", ")} — ${wrap.name}`;
 }
+
+// getBouquetFlowers/setBouquetFlowers bilerek burada DEGIL: bu dosya
+// client bilesenlerinden (bouquet-builder, bouquet-scene) de import
+// edildigi icin Node-only "./store" modulunu buraya almiyoruz (aksi
+// halde `fs` tarayici derlemesine sizar). Sunucu taraf okuma/yazma
+// fonksiyonlari lib/store.ts icinde.

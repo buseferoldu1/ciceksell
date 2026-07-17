@@ -1,23 +1,18 @@
-// Marka, hakkimizda ve iletisim bilgileri ciceksel.com'dan alinmistir.
+// Bu dosya CLIENT bilesenlerinden de import edilir (navbar, footer, contact,
+// whatsapp-button vb.); bu yuzden Node-only modul kullanan "./store"u
+// BURADA import ETMEYIN — aksi halde `fs` tarayici derlemesine sizar ve
+// build kirilir. Sunucu tarafi okuma/yazma fonksiyonlari (getContactSettings/
+// setContactSettings) bilerek lib/store.ts icinde tutuluyor.
 
-export const SITE = {
+// Marka kimligi (ad, slogan, odeme rozetleri) — bunlar nadiren degisir ve
+// admin panelinden duzenlenmez. Iletisim/banka bilgileri asagidaki
+// ContactSettings uzerinden admin panelinden duzenlenebilir.
+export const SITE_BRAND = {
   name: "Çiçeksel",
   tagline: "since 1984",
   description:
     "1984'ten bu yana Ankara Kızılay'da. Sevdiklerinize en güzel çiçekleri gönderin — aynı gün teslimat, taze çiçek garantisi ve 40 yıllık güvenle.",
-  phone: "+90 535 733 9333",
-  phoneHref: "tel:+905357339333",
-  email: "ciceksel1984@gmail.com",
-  emailHref: "mailto:ciceksel1984@gmail.com",
-  address: {
-    line1: "Atatürk Bulvarı MEB Yanı Çiçekçiler Çarşısı No: 21-22-23-24",
-    line2: "Ankara, Çankaya 06420",
-    country: "Türkiye",
-    short: "Ankara, Çankaya",
-  },
-  instagram: "https://instagram.com/cicekselcom",
-  instagramHandle: "@cicekselcom",
-  responseTime: "Genellikle 24 saat içinde yanıt veririz",
+  country: "Türkiye",
   payment: ["iyzico", "VISA", "Mastercard", "TROY", "3D Secure"],
   legal: [
     { label: "Gizlilik Politikası", href: "#" },
@@ -27,17 +22,50 @@ export const SITE = {
 } as const;
 
 /**
- * Havale/EFT icin banka hesap bilgisi. `iban` bos birakilirsa odeme
- * sayfasinda Havale/EFT secenegi otomatik gizlenir (yanlis IBAN'a para
- * gonderilmesini onlemek icin). IBAN alinca burayi doldurmak yeterli.
+ * Admin panelinden duzenlenebilir iletisim + banka bilgileri.
+ * `getContactSettings()` ile DB'den (yoksa DEFAULT_CONTACT'tan) okunur.
  */
-export const BANK = {
-  holder: "Etem Perçin",
-  iban: "TR41 0001 0011 3327 9183 4050 18",
-  bankName: "Ziraat Bankası",
-} as const;
+export interface ContactSettings {
+  phone: string;
+  email: string;
+  addressLine1: string;
+  addressLine2: string;
+  addressShort: string;
+  instagram: string;
+  instagramHandle: string;
+  responseTime: string;
+  /** Havale/EFT hesap sahibi. Bos ise havale secenegi gizlenir. */
+  bankHolder: string;
+  /** Havale/EFT IBAN. Bos ise havale secenegi gizlenir. */
+  bankIban: string;
+  bankName: string;
+}
 
-export const BANKA_AKTIF = BANK.iban.trim().length > 0;
+export const DEFAULT_CONTACT: ContactSettings = {
+  phone: "+90 535 733 9333",
+  email: "ciceksel1984@gmail.com",
+  addressLine1: "Atatürk Bulvarı MEB Yanı Çiçekçiler Çarşısı No: 21-22-23-24",
+  addressLine2: "Ankara, Çankaya 06420",
+  addressShort: "Ankara, Çankaya",
+  instagram: "https://instagram.com/cicekselcom",
+  instagramHandle: "@cicekselcom",
+  responseTime: "Genellikle 24 saat içinde yanıt veririz",
+  bankHolder: "Etem Perçin",
+  bankIban: "TR41 0001 0011 3327 9183 4050 18",
+  bankName: "Ziraat Bankası",
+};
+
+/** phone/email'den turetilen href'ler — bilesenlerde tekrar hesaplanmaz */
+export function contactHrefs(c: ContactSettings) {
+  return {
+    phoneHref: `tel:${c.phone.replace(/[^\d+]/g, "")}`,
+    emailHref: `mailto:${c.email}`,
+  };
+}
+
+export function bankActive(c: ContactSettings): boolean {
+  return c.bankIban.trim().length > 0;
+}
 
 export const ABOUT_INTRO =
   "1984'ten bu yana Ankara'nın kalbinde, her duyguya en güzel çiçekle eşlik ediyoruz.";

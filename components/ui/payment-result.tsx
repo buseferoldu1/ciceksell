@@ -16,7 +16,7 @@ import PetalBurst from "@/components/ui/petal-burst";
 import FallingPetals from "@/components/ui/falling-petals";
 import { useCart } from "@/components/cart/cart-context";
 import { formatPrice } from "@/lib/products";
-import { BANK, SITE } from "@/lib/site";
+import { useContactSettings } from "@/components/site-settings-context";
 
 export default function PaymentResult({
   durum,
@@ -28,6 +28,7 @@ export default function PaymentResult({
   tutar?: number;
 }) {
   const { clear } = useCart();
+  const contact = useContactSettings();
   const [kopyalandi, setKopyalandi] = useState(false);
 
   // Siparis olustuysa (kart basarili / havale / kapida) sepeti temizle
@@ -95,20 +96,20 @@ export default function PaymentResult({
           </p>
 
           <div className="mt-6 space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-left text-sm">
-            <Satir etiket="Alıcı" deger={BANK.holder} />
-            <Satir etiket="Banka" deger={BANK.bankName} />
+            <Satir etiket="Alıcı" deger={contact.bankHolder} />
+            <Satir etiket="Banka" deger={contact.bankName} />
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-[11px] uppercase tracking-wider text-[#e5e2e3]/40">
                   IBAN
                 </div>
                 <div className="truncate font-mono text-base font-semibold text-[#e5e2e3]">
-                  {BANK.iban}
+                  {contact.bankIban}
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => kopyala(BANK.iban)}
+                onClick={() => kopyala(contact.bankIban)}
                 className="flex shrink-0 items-center gap-1.5 rounded-full border border-[#f6b6be]/40 px-3 py-1.5 text-xs font-semibold text-[#f6b6be] transition-colors hover:bg-[#f6b6be] hover:text-[#131314]"
               >
                 {kopyalandi ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -124,7 +125,7 @@ export default function PaymentResult({
           </div>
 
           <p className="mt-4 text-xs text-[#e5e2e3]/40">
-            Sorularınız için {SITE.phone} numaralı hattımızdan bize
+            Sorularınız için {contact.phone} numaralı hattımızdan bize
             ulaşabilirsiniz.
           </p>
           <AnaSayfaButonu />

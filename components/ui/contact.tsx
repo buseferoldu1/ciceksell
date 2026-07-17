@@ -2,7 +2,8 @@
 
 import { motion, type Variants } from "framer-motion";
 import { Clock, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
-import { SITE } from "@/lib/site";
+import { SITE_BRAND, contactHrefs } from "@/lib/site";
+import { useContactSettings } from "@/components/site-settings-context";
 import { InstagramIcon } from "./icons";
 
 const containerVariants: Variants = {
@@ -20,6 +21,8 @@ const cardVariants: Variants = {
 };
 
 export default function Contact() {
+  const contact = useContactSettings();
+  const { phoneHref, emailHref } = contactHrefs(contact);
   return (
     <section id="iletisim" className="bg-[#f4f2ef] px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
@@ -50,7 +53,7 @@ export default function Contact() {
           <motion.a
             variants={cardVariants}
             whileHover={{ y: -6 }}
-            href={SITE.phoneHref}
+            href={phoneHref}
             className="group rounded-2xl border border-[#d9594c]/12 bg-white p-7 shadow-sm transition-shadow hover:shadow-lg"
           >
             <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#d9594c]/10">
@@ -60,7 +63,7 @@ export default function Contact() {
               Telefon
             </h3>
             <p className="mt-1 text-sm text-slate-600 transition-colors group-hover:text-[#d9594c]">
-              {SITE.phone}
+              {contact.phone}
             </p>
           </motion.a>
 
@@ -68,7 +71,7 @@ export default function Contact() {
           <motion.a
             variants={cardVariants}
             whileHover={{ y: -6 }}
-            href={SITE.emailHref}
+            href={emailHref}
             className="group rounded-2xl border border-[#d9594c]/12 bg-white p-7 shadow-sm transition-shadow hover:shadow-lg"
           >
             <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#d9594c]/10">
@@ -78,11 +81,11 @@ export default function Contact() {
               E-posta
             </h3>
             <p className="mt-1 text-sm text-slate-600 transition-colors group-hover:text-[#d9594c]">
-              {SITE.email}
+              {contact.email}
             </p>
             <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
               <Clock className="h-3 w-3" />
-              {SITE.responseTime}
+              {contact.responseTime}
             </p>
           </motion.a>
 
@@ -90,7 +93,7 @@ export default function Contact() {
           <motion.a
             variants={cardVariants}
             whileHover={{ y: -6 }}
-            href={SITE.instagram}
+            href={contact.instagram}
             target="_blank"
             rel="noopener noreferrer"
             className="group rounded-2xl border border-[#d9594c]/12 bg-white p-7 shadow-sm transition-shadow hover:shadow-lg"
@@ -102,7 +105,7 @@ export default function Contact() {
               Bizi Takip Edin
             </h3>
             <p className="mt-1 text-sm text-slate-600 transition-colors group-hover:text-[#d9594c]">
-              {SITE.instagramHandle}
+              {contact.instagramHandle}
             </p>
           </motion.a>
 
@@ -118,11 +121,11 @@ export default function Contact() {
               Adres
             </h3>
             <p className="mt-2 leading-relaxed text-slate-600">
-              {SITE.address.line1}
+              {contact.addressLine1}
               <br />
-              {SITE.address.line2}
+              {contact.addressLine2}
               <br />
-              {SITE.address.country}
+              {SITE_BRAND.country}
             </p>
           </motion.div>
 
@@ -138,7 +141,7 @@ export default function Contact() {
               Güvenli Ödeme
             </h3>
             <div className="mt-3 flex flex-wrap gap-2">
-              {SITE.payment.map((p) => (
+              {SITE_BRAND.payment.map((p) => (
                 <span
                   key={p}
                   className="rounded-md border border-black/5 bg-[#f4f2ef] px-2.5 py-1 text-xs font-medium text-slate-600"

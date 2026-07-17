@@ -2,6 +2,9 @@ import { promises as fs } from "fs";
 import path from "path";
 import { neon } from "@neondatabase/serverless";
 import { CATALOG, MODELS_3D, type Product } from "./products";
+import { DEFAULT_CONTACT, type ContactSettings } from "./site";
+import { DEFAULT_FLOWER_OPTIONS, type FlowerOption } from "./bouquet";
+import { DEFAULT_FLOWER_STORIES, type FlowerStory } from "./flower-stories";
 
 /**
  * Veri deposu iki modda calisir:
@@ -18,6 +21,7 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const PRODUCTS_FILE = path.join(DATA_DIR, "products.json");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
+const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 
 export type OrderStatus =
   | "yeni"
@@ -127,6 +131,16 @@ async function ensureSchema() {
           created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
       `;
+      // Genel amacli anahtar-deger ayar deposu: iletisim bilgileri, banka
+      // hesabi, atolye icerigi (cicek hikayeleri, buket cicekleri) gibi
+      // admin panelinden duzenlenebilir icerikler burada JSON olarak tutulur.
+      await sql`
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
       // Ilk kurulumda katalogu tohumla
       const [{ count }] = (await sql`SELECT COUNT(*)::int AS count FROM products`) as {
         count: number;
@@ -184,6 +198,11 @@ async function ensureFiles() {
     await fs.access(USERS_FILE);
   } catch {
     await fs.writeFile(USERS_FILE, "[]", "utf8");
+  }
+  try {
+    await fs.access(SETTINGS_FILE);
+  } catch {
+    await fs.writeFile(SETTINGS_FILE, "{}", "utf8");
   }
 }
 
@@ -512,4 +531,89 @@ export async function updateOrderStatus(
   orders[idx].status = status;
   await writeFileOrders(orders);
   return orders[idx];
+}
+
+/* ----------------------------- Genel ayarlar ------------------------------ */
+/**
+ * Anahtar-deger bazli genel ayar deposu: iletisim bilgileri, banka hesabi,
+ * atolye icerigi (cicek hikayeleri, buket cicekleri) gibi admin panelinden
+ * duzenlenebilir icerikler burada tutulur. Deger her zaman JSON'a
+ * serilestirilebilir olmalidir; cagiran taraf tipini bilir (generic).
+ */
+
+export async function getSetting<T>(key: string): Promise<T | null> {
+  if (sql) {
+    await ensureSchema();
+    const rows = (await sql`
+      SELECT value FROM settings WHERE key = ${key}
+    `) as { value: T }[];
+    return rows[0] ? rows[0].value : null;
+  }
+  await ensureFiles();
+  const all = JSON.parse(await fs.readFile(SETTINGS_FILE, "utf8")) as Record<
+    string,
+    unknown
+  >;
+  return key in all ? (all[key] as T) : null;
+}
+
+export async function setSetting<T>(key: string, value: T): Promise<T> {
+  if (sql) {
+    await ensureSchema();
+    await sql`
+      INSERT INTO settings (key, value, updated_at)
+      VALUES (${key}, ${JSON.stringify(value)}::jsonb, now())
+      ON CONFLICT (key) DO UPDATE SET value = ${JSON.stringify(value)}::jsonb, updated_at = now()
+    `;
+    return value;
+  }
+  await ensureFiles();
+  const all = JSON.parse(await fs.readFile(SETTINGS_FILE, "utf8")) as Record<
+    string,
+    unknown
+  >;
+  all[key] = value;
+  await fs.writeFile(SETTINGS_FILE, JSON.stringify(all, null, 2), "utf8");
+  return value;
+}
+
+/* ------------------- Iletisim / Atolye ozel ayar okuma/yazma ------------------- */
+/**
+ * Bu fonksiyonlar bilerek burada (store.ts, Node-only "fs" kullanan
+ * dosyada) tutulur: DEFAULT_* sabitleri client bilesenlerinden de
+ * kullanildigi icin lib/site.ts, lib/bouquet.ts, lib/flower-stories.ts
+ * client-safe kalmali (fs/store'a bagimli olmamali).
+ */
+
+export async function getContactSettings(): Promise<ContactSettings> {
+  const saved = await getSetting<Partial<ContactSettings>>("contact");
+  return { ...DEFAULT_CONTACT, ...saved };
+}
+
+export async function setContactSettings(
+  data: ContactSettings
+): Promise<ContactSettings> {
+  return setSetting("contact", data);
+}
+
+export async function getBouquetFlowers(): Promise<FlowerOption[]> {
+  return (await getSetting<FlowerOption[]>("bouquet-flowers")) ?? DEFAULT_FLOWER_OPTIONS;
+}
+
+export async function setBouquetFlowers(
+  flowers: FlowerOption[]
+): Promise<FlowerOption[]> {
+  return setSetting("bouquet-flowers", flowers);
+}
+
+export async function getFlowerStories(): Promise<FlowerStory[]> {
+  return (
+    (await getSetting<FlowerStory[]>("flower-stories")) ?? DEFAULT_FLOWER_STORIES
+  );
+}
+
+export async function setFlowerStories(
+  stories: FlowerStory[]
+): Promise<FlowerStory[]> {
+  return setSetting("flower-stories", stories);
 }

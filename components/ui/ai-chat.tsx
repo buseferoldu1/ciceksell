@@ -15,6 +15,7 @@ import {
 import { cevapUret, type AsistanCevabi } from "@/lib/assistant";
 import { formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/components/cart/cart-context";
+import { useContactSettings } from "@/components/site-settings-context";
 
 /**
  * Referans AnimatedAIChat'ten uyarlandi:
@@ -55,6 +56,7 @@ export default function AiChat({ products }: { products: Product[] }) {
     },
   ]);
   const { addItem } = useCart();
+  const contact = useContactSettings();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export default function AiChat({ products }: { products: Product[] }) {
 
     // Kisa bir dusunme gecikmesi (daha dogal his)
     setTimeout(() => {
-      const cevap: AsistanCevabi = cevapUret(text, products);
+      const cevap: AsistanCevabi = cevapUret(text, products, contact);
       setMessages((p) => [
         ...p,
         {

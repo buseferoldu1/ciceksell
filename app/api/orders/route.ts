@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { addOrder, getOrders, getProducts, type PaymentMethod } from "@/lib/store";
 import { isAdmin } from "@/lib/admin-key";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/products";
-import { BANKA_AKTIF } from "@/lib/site";
+import { bankActive } from "@/lib/site";
+import { getContactSettings } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  if (method === "havale" && !BANKA_AKTIF) {
+  if (method === "havale" && !bankActive(await getContactSettings())) {
     return NextResponse.json(
       { error: "Havale/EFT şu an kullanılamıyor." },
       { status: 503 }

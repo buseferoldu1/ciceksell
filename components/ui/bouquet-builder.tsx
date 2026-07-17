@@ -10,12 +10,13 @@ const BouquetScene = dynamic(() => import("@/components/ui/bouquet-scene"), {
   ssr: false,
 });
 import {
-  FLOWER_OPTIONS,
+  DEFAULT_FLOWER_OPTIONS,
   MIN_STEMS,
   WRAP_OPTIONS,
   bouquetDescription,
   bouquetTotals,
   type BouquetSelection,
+  type FlowerOption,
 } from "@/lib/bouquet";
 import { formatPrice, type Product } from "@/lib/products";
 import { useCart } from "@/components/cart/cart-context";
@@ -25,14 +26,19 @@ import { useCart } from "@/components/cart/cart-context";
  * Musteri cicek turlerini ve adetlerini secer, ambalaj belirler; fiyat
  * canli hesaplanir ve buket sepete ozel urun olarak eklenir.
  */
-export default function BouquetBuilder() {
+export default function BouquetBuilder({
+  flowers = DEFAULT_FLOWER_OPTIONS,
+}: {
+  flowers?: FlowerOption[];
+}) {
+  const FLOWER_OPTIONS = flowers.length > 0 ? flowers : DEFAULT_FLOWER_OPTIONS;
   const { addItem, openCart } = useCart();
   const [stems, setStems] = useState<Record<string, number>>({});
   const [wrapId, setWrapId] = useState(WRAP_OPTIONS[0].id);
   const [eklendi, setEklendi] = useState(false);
 
   const sel: BouquetSelection = useMemo(() => ({ stems, wrapId }), [stems, wrapId]);
-  const t = useMemo(() => bouquetTotals(sel), [sel]);
+  const t = useMemo(() => bouquetTotals(sel, FLOWER_OPTIONS), [sel, FLOWER_OPTIONS]);
 
   const degistir = (id: string, delta: number) => {
     setEklendi(false);
@@ -57,7 +63,7 @@ export default function BouquetBuilder() {
       // Her ozel buket ayri satir olsun diye benzersiz id
       id: `ozel-${Date.now().toString(36)}`,
       name: "Özel Buketiniz",
-      tag: bouquetDescription(sel),
+      tag: bouquetDescription(sel, FLOWER_OPTIONS),
       price: t.total,
       // Sepette gorunecek temsili gorsel: en cok secilen cicek
       image:
@@ -234,6 +240,7 @@ export default function BouquetBuilder() {
                     <BouquetScene
                       stems={stems}
                       wrapId={wrapId}
+                      flowers={FLOWER_OPTIONS}
                       className="absolute inset-0 h-full w-full"
                     />
                     <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/60">

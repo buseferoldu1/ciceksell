@@ -5,7 +5,8 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, Phone, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
-import { SITE } from "@/lib/site";
+import { SITE_BRAND, contactHrefs } from "@/lib/site";
+import { useContactSettings } from "@/components/site-settings-context";
 
 const NAV_LINKS = [
   { href: "/katalog", label: "Katalog" },
@@ -18,6 +19,8 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { count, openCart } = useCart();
+  const contact = useContactSettings();
+  const { phoneHref } = contactHrefs(contact);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 8);
@@ -40,11 +43,11 @@ export default function Navbar() {
         <Link href="/" className="flex flex-col items-center leading-none">
           <img
             src="/logo.webp"
-            alt={SITE.name}
+            alt={SITE_BRAND.name}
             className="h-11 w-auto sm:h-12"
           />
           <span className="-mt-0.5 text-[10px] italic tracking-wide text-[#33323a]/45">
-            {SITE.tagline}
+            {SITE_BRAND.tagline}
           </span>
         </Link>
 
@@ -62,11 +65,11 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <a
-            href={SITE.phoneHref}
+            href={phoneHref}
             className="hidden items-center gap-1.5 text-xs text-[#33323a]/60 transition-colors hover:text-[#d9594c] lg:flex"
           >
             <Phone className="h-3.5 w-3.5" />
-            {SITE.phone}
+            {contact.phone}
           </a>
           <Link
             href="/katalog"

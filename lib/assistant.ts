@@ -1,6 +1,6 @@
 import type { Product } from "./products";
 import { formatPrice, FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "./products";
-import { SITE } from "./site";
+import { DEFAULT_CONTACT, type ContactSettings } from "./site";
 
 /**
  * Kural tabanli asistan.
@@ -48,7 +48,8 @@ function butceBul(mesaj: string): number | null {
 
 export function cevapUret(
   soru: string,
-  urunler: Product[]
+  urunler: Product[],
+  SITE: ContactSettings = DEFAULT_CONTACT
 ): AsistanCevabi {
   const m = norm(soru);
   const aktif = urunler.filter((u) => u.price > 0);
@@ -185,7 +186,7 @@ export function cevapUret(
   /* ---------------- Iletisim / adres / saat ---------------- */
   if (iceriyor(m, "iletisim", "telefon", "numara", "adres", "nerede", "magaza", "ulasabilir", "eposta", "e-posta", "mail", "instagram")) {
     return {
-      text: `Bize şu kanallardan ulaşabilirsiniz:\n📞 ${SITE.phone}\n✉️ ${SITE.email}\n📍 ${SITE.address.line1}, ${SITE.address.line2}\n📷 ${SITE.instagramHandle}\n\nE-postalara genellikle 24 saat içinde dönüyoruz.`,
+      text: `Bize şu kanallardan ulaşabilirsiniz:\n📞 ${SITE.phone}\n✉️ ${SITE.email}\n📍 ${SITE.addressLine1}, ${SITE.addressLine2}\n📷 ${SITE.instagramHandle}\n\nE-postalara genellikle 24 saat içinde dönüyoruz.`,
     };
   }
 

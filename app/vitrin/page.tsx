@@ -6,13 +6,18 @@ import InteractiveShowcase from "@/components/ui/interactive-showcase";
 import ModelShowcase from "@/components/ui/model-showcase";
 import BouquetBuilder from "@/components/ui/bouquet-builder";
 import RevealText from "@/components/ui/reveal-text";
-import { getProducts } from "@/lib/store";
+import { getProducts, getFlowerStories, getBouquetFlowers } from "@/lib/store";
 
-// 3D urunler admin panelinden yonetilebildigi icin guncel veri okunur
+// 3D urunler ve atolye icerigi admin panelinden yonetilebildigi icin
+// guncel veri okunur
 export const dynamic = "force-dynamic";
 
 export default async function VitrinPage() {
-  const products = await getProducts();
+  const [products, flowerStories, bouquetFlowers] = await Promise.all([
+    getProducts(),
+    getFlowerStories(),
+    getBouquetFlowers(),
+  ]);
   const modelProducts = products.filter((p) => p.model);
 
   return (
@@ -30,14 +35,14 @@ export default async function VitrinPage() {
       <div className="relative z-10">
         <div className="relative">
           <FallingPetals count={12} />
-          <InteractiveShowcase />
+          <InteractiveShowcase flowers={flowerStories} />
         </div>
 
         {/* 3D koleksiyon — ana sayfadan buraya tasindi */}
         <ModelShowcase products={modelProducts} />
 
         {/* Kendi buketini olustur */}
-        <BouquetBuilder />
+        <BouquetBuilder flowers={bouquetFlowers} />
 
         {/* Marka imza bandi — hover'da harflerin ardinda cicekler belirir */}
         <RevealText />

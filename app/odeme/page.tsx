@@ -19,7 +19,8 @@ import {
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_FEE,
 } from "@/lib/products";
-import { BANKA_AKTIF } from "@/lib/site";
+import { bankActive } from "@/lib/site";
+import { useContactSettings } from "@/components/site-settings-context";
 import FallingPetals from "@/components/ui/falling-petals";
 import ProgressIndicator from "@/components/ui/progress-indicator";
 import GlassCalendar from "@/components/ui/glass-calendar";
@@ -48,6 +49,8 @@ const gecerliEposta = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 
 export default function OdemePage() {
   const { items, subtotal } = useCart();
+  const contact = useContactSettings();
+  const BANKA_AKTIF = bankActive(contact);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [yontem, setYontem] = useState<Yontem>("kart");
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});

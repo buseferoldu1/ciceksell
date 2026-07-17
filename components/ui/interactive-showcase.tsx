@@ -13,72 +13,12 @@ import { ChevronLeft, ChevronRight, ShoppingBag, Sparkles } from "lucide-react";
 import ModelViewer from "./model-viewer";
 import { InstagramIcon } from "./icons";
 import { useCart } from "@/components/cart/cart-context";
-import type { CategoryKey } from "@/lib/products";
-import { SITE } from "@/lib/site";
-
-interface Flower {
-  id: number;
-  key: CategoryKey;
-  category: string;
-  name: string;
-  description: string;
-  origin: string;
-  family: string;
-  story: string;
-  // Gorseller: Wikimedia Commons (bkz. public/flowers/ATTRIBUTION.md)
-  image: string;
-  thumbnail: string;
-  // Imlecle 360 derece dondurulebilen 3D model (public/models/*.glb)
-  model: string;
-}
-
-const FLOWERS: Flower[] = [
-  {
-    id: 1,
-    key: "katalog",
-    category: "Atölye Serisi",
-    name: "Gül",
-    description:
-      "Kadife dokulu yaprakları ve zamansız zarafetiyle, tutkunun en klasik ifadesi.",
-    origin: "Anadolu",
-    family: "Rosaceae",
-    story:
-      "Güllerimiz gün doğumundan önce toplanır ve en yoğun kokusunu koruması için soğuk zincirde atölyemize taşınır.",
-    image: "/flowers/gul.jpg",
-    thumbnail: "/flowers/gul-thumb.jpg",
-    model: "/models/gul-3d.glb",
-  },
-  {
-    id: 2,
-    key: "katalog",
-    category: "Atölye Serisi",
-    name: "Orkide",
-    description:
-      "Zarif kavisleri ve haftalarca süren ömrüyle, sadeliğin en gösterişli yorumu.",
-    origin: "Güneydoğu Asya",
-    family: "Orchidaceae",
-    story:
-      "Orkidelerimiz el işçiliğiyle hazırlanan özel serada haftalar süren bir olgunlaşma sürecinden geçer.",
-    image: "/flowers/orkide.jpg",
-    thumbnail: "/flowers/orkide-thumb.jpg",
-    model: "/models/orkide-3d.glb",
-  },
-  {
-    id: 3,
-    key: "katalog",
-    category: "Atölye Serisi",
-    name: "Ortanca",
-    description:
-      "Bulut gibi kabaran taç yapraklarıyla, bereketin ve içten duyguların çiçeği.",
-    origin: "Doğu Asya",
-    family: "Hydrangeaceae",
-    story:
-      "Ortancalarımız toprağın asidine göre renk değiştirir; her demet doğanın o güne özel imzasını taşır.",
-    image: "/flowers/ortanca.jpg",
-    thumbnail: "/flowers/ortanca-thumb.jpg",
-    model: "/models/ortanca-3d.glb",
-  },
-];
+import { contactHrefs } from "@/lib/site";
+import { useContactSettings } from "@/components/site-settings-context";
+import {
+  DEFAULT_FLOWER_STORIES,
+  type FlowerStory,
+} from "@/lib/flower-stories";
 
 const NAV_LINKS = [
   { label: "Koleksiyon", href: "/katalog" },
@@ -92,9 +32,16 @@ const textVariants = {
   exit: { opacity: 0, y: -20 },
 };
 
-export default function InteractiveShowcase() {
+export default function InteractiveShowcase({
+  flowers = DEFAULT_FLOWER_STORIES,
+}: {
+  flowers?: FlowerStory[];
+}) {
   const [index, setIndex] = useState(0);
   const { count, openCart } = useCart();
+  const contact = useContactSettings();
+  const { phoneHref } = contactHrefs(contact);
+  const FLOWERS = flowers.length > 0 ? flowers : DEFAULT_FLOWER_STORIES;
   const flower = FLOWERS[index];
 
   const goTo = (i: number) => setIndex((i + FLOWERS.length) % FLOWERS.length);
@@ -305,7 +252,7 @@ export default function InteractiveShowcase() {
           {/* Isletmenin yalnizca Instagram hesabi var (ciceksel.com) */}
           <div className="flex items-center justify-end gap-3">
             <motion.a
-              href={SITE.instagram}
+              href={contact.instagram}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
@@ -317,10 +264,10 @@ export default function InteractiveShowcase() {
               <InstagramIcon className="h-4 w-4" />
             </motion.a>
             <a
-              href={SITE.phoneHref}
+              href={phoneHref}
               className="text-xs text-[#e5e2e3]/50 transition-colors hover:text-[#f6b6be]"
             >
-              {SITE.phone}
+              {contact.phone}
             </a>
           </div>
         </div>
