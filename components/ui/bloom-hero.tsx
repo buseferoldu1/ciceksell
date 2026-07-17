@@ -77,10 +77,7 @@ export default function BloomHero({ products }: { products?: Product[] }) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
-              <p className="font-serif text-3xl italic text-[#d9594c] lg:text-4xl">
-                {slide.script}
-              </p>
-              <h1 className="mt-3 font-serif text-6xl font-bold leading-[0.95] tracking-tight text-[#33323a] lg:text-8xl">
+              <h1 className="font-serif text-6xl font-bold leading-[0.95] tracking-tight text-[#33323a] lg:text-8xl">
                 {slide.headlineTop}
                 <br />
                 {slide.headlineBottom}
@@ -170,9 +167,6 @@ export default function BloomHero({ products }: { products?: Product[] }) {
                   className="h-12 w-12 rounded-lg object-cover"
                 />
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[#d9594c]">
-                    {s.script}
-                  </div>
                   <div className="text-sm font-medium text-[#33323a]">
                     {s.product.name}
                   </div>

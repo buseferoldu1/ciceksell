@@ -196,7 +196,7 @@ export default function CircularGallery({
             transition={{ duration: 0.6 }}
             className="font-serif text-3xl font-bold text-[#33323a] md:text-4xl"
           >
-            Aranjman Çemberi
+            Çiçeksel Dünyası
           </motion.h2>
           <p className="mt-2 text-sm text-slate-500">
             Kaydırarak çevirin • Üzerine gelip sepete ekleyin
