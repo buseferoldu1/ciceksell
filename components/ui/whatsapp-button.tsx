@@ -35,7 +35,7 @@ export default function WhatsAppButton() {
       transition={{ delay: 1, type: "spring", stiffness: 260, damping: 18 }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.92 }}
-      className="group fixed bottom-5 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/30 transition-colors hover:bg-[#20BD5A]"
+      className="group fixed bottom-8 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/30 transition-colors hover:bg-[#20BD5A]"
     >
       {/* Dikkat ceken nabiz halkasi */}
       <span className="absolute inset-0 animate-ping rounded-full bg-[#25D366]/40 [animation-duration:2.5s]" />

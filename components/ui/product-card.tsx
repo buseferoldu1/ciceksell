@@ -94,9 +94,9 @@ export default function ProductCard({ product, index, onAdd }: ProductCardProps)
           />
         </motion.div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#131314]/70 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#131314]/70 via-transparent to-transparent opacity-100 transition-opacity duration-500 md:opacity-0 md:group-hover:opacity-100" />
 
-        <div className="absolute inset-x-4 bottom-4 translate-y-16 opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="absolute inset-x-4 bottom-4 opacity-100 transition-all duration-500 ease-out md:translate-y-16 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
           <button
             type="button"
             onClick={() => onAdd(product)}

@@ -104,7 +104,7 @@ export default function AiChat({ products }: { products: Product[] }) {
         transition={{ delay: 1.2, type: "spring", stiffness: 260, damping: 18 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.92 }}
-        className="group fixed bottom-[4.75rem] right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-[#d9594c] text-white shadow-lg shadow-[#d9594c]/30 transition-colors hover:bg-[#c2493d]"
+        className="group fixed bottom-[5.5rem] right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-[#d9594c] text-white shadow-lg shadow-[#d9594c]/30 transition-colors hover:bg-[#c2493d]"
       >
         <AnimatePresence mode="wait" initial={false}>
           {open ? (
@@ -131,7 +131,7 @@ export default function AiChat({ products }: { products: Product[] }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
-            className="fixed bottom-36 right-5 z-[60] flex h-[30rem] w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-2xl"
+            className="fixed bottom-[9.75rem] right-5 z-[60] flex h-[30rem] w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-2xl"
           >
             {/* Baslik */}
             <div className="flex items-center gap-3 border-b border-black/5 bg-[#f4f2ef] px-5 py-3.5">
