@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { addProduct, getProducts } from "@/lib/store";
 import { isAdmin } from "@/lib/admin-key";
+import { CATEGORIES, type CategoryKey } from "@/lib/products";
+
+const GECERLI_KATEGORILER = new Set(CATEGORIES.map((c) => c.key));
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +29,9 @@ export async function POST(req: Request) {
     price: body.price,
     image: String(body.image ?? "/flowers/katalog/41-gul.jpg"),
     model: body.model ? String(body.model) : undefined,
+    category: GECERLI_KATEGORILER.has(body.category as CategoryKey)
+      ? (body.category as CategoryKey)
+      : "karisik",
   });
   return NextResponse.json(product, { status: 201 });
 }

@@ -77,6 +77,10 @@ export interface Order {
   items: OrderItem[];
   subtotal: number;
   shipping: number;
+  /** Kupon indirimi (TL). Kupon uygulanmadiysa 0. */
+  discount: number;
+  /** Uygulanan kupon kodu (varsa). */
+  couponCode?: string;
   total: number;
 }
 
@@ -105,6 +109,7 @@ async function ensureSchema() {
           seq SERIAL
         )
       `;
+      await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'karisik'`;
       await sql`
         CREATE TABLE IF NOT EXISTS orders (
           id TEXT PRIMARY KEY,
@@ -122,6 +127,9 @@ async function ensureSchema() {
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'odendi'`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_id TEXT`;
       await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT NOT NULL DEFAULT 'kart'`;
+      // Kupon kodu indirimi
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount INTEGER NOT NULL DEFAULT 0`;
+      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT`;
       await sql`
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
@@ -148,8 +156,8 @@ async function ensureSchema() {
       if (count === 0) {
         for (const p of seedProducts()) {
           await sql`
-            INSERT INTO products (id, name, tag, price, image, model)
-            VALUES (${p.id}, ${p.name}, ${p.tag}, ${p.price}, ${p.image}, ${p.model ?? null})
+            INSERT INTO products (id, name, tag, price, image, model, category)
+            VALUES (${p.id}, ${p.name}, ${p.tag}, ${p.price}, ${p.image}, ${p.model ?? null}, ${p.category})
             ON CONFLICT (id) DO NOTHING
           `;
         }
@@ -166,6 +174,7 @@ type ProductRow = {
   price: number;
   image: string;
   model: string | null;
+  category: string;
 };
 
 function rowToProduct(r: ProductRow): Product {
@@ -175,7 +184,7 @@ function rowToProduct(r: ProductRow): Product {
     tag: r.tag,
     price: r.price,
     image: r.image,
-    category: "katalog",
+    category: (r.category as Product["category"]) ?? "karisik",
     ...(r.model ? { model: r.model } : {}),
   };
 }
@@ -230,7 +239,7 @@ export async function getProducts(): Promise<Product[]> {
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      SELECT id, name, tag, price, image, model FROM products ORDER BY seq ASC
+      SELECT id, name, tag, price, image, model, category FROM products ORDER BY seq ASC
     `) as ProductRow[];
     return rows.map(rowToProduct);
   }
@@ -238,20 +247,20 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function addProduct(
-  data: Omit<Product, "id" | "category">
+  data: Omit<Product, "id">
 ): Promise<Product> {
   const id = `p${Date.now().toString(36)}`;
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      INSERT INTO products (id, name, tag, price, image, model)
-      VALUES (${id}, ${data.name}, ${data.tag}, ${data.price}, ${data.image}, ${data.model ?? null})
-      RETURNING id, name, tag, price, image, model
+      INSERT INTO products (id, name, tag, price, image, model, category)
+      VALUES (${id}, ${data.name}, ${data.tag}, ${data.price}, ${data.image}, ${data.model ?? null}, ${data.category ?? "karisik"})
+      RETURNING id, name, tag, price, image, model, category
     `) as ProductRow[];
     return rowToProduct(rows[0]);
   }
   const list = await readFileProducts();
-  const product: Product = { ...data, id, category: "katalog" };
+  const product: Product = { ...data, id, category: data.category ?? "karisik" };
   list.push(product);
   await writeFileProducts(list);
   return product;
@@ -259,7 +268,7 @@ export async function addProduct(
 
 export async function updateProduct(
   id: string,
-  patch: Partial<Omit<Product, "id" | "category">>
+  patch: Partial<Omit<Product, "id">>
 ): Promise<Product | null> {
   if (sql) {
     await ensureSchema();
@@ -269,19 +278,20 @@ export async function updateProduct(
         tag   = COALESCE(${patch.tag ?? null}, tag),
         price = COALESCE(${patch.price ?? null}, price),
         image = COALESCE(${patch.image ?? null}, image),
+        category = COALESCE(${patch.category ?? null}, category),
         -- model YALNIZCA acikca gonderildiyse degistirilir. Onceden
         -- gonderilmediginde NULL yaziliyordu: adini/fiyatini duzenledigin
         -- her 3D urun modelini kaybediyordu.
         model = CASE WHEN ${"model" in patch} THEN ${patch.model ?? null} ELSE model END
       WHERE id = ${id}
-      RETURNING id, name, tag, price, image, model
+      RETURNING id, name, tag, price, image, model, category
     `) as ProductRow[];
     return rows[0] ? rowToProduct(rows[0]) : null;
   }
   const list = await readFileProducts();
   const idx = list.findIndex((p) => p.id === id);
   if (idx === -1) return null;
-  list[idx] = { ...list[idx], ...patch, id, category: "katalog" };
+  list[idx] = { ...list[idx], ...patch, id };
   await writeFileProducts(list);
   return list[idx];
 }
@@ -314,6 +324,8 @@ type OrderRow = {
   items: OrderItem[];
   subtotal: number;
   shipping: number;
+  discount: number;
+  coupon_code: string | null;
   total: number;
 };
 
@@ -329,6 +341,8 @@ function rowToOrder(r: OrderRow): Order {
     items: r.items,
     subtotal: r.subtotal,
     shipping: r.shipping,
+    discount: r.discount ?? 0,
+    ...(r.coupon_code ? { couponCode: r.coupon_code } : {}),
     total: r.total,
   };
 }
@@ -338,7 +352,7 @@ export async function getOrders(): Promise<Order[]> {
     await ensureSchema();
     const rows = (await sql`
       SELECT id, created_at, status, payment_status, payment_method, payment_id,
-             customer, items, subtotal, shipping, total
+             customer, items, subtotal, shipping, discount, coupon_code, total
       FROM orders ORDER BY created_at DESC
     `) as OrderRow[];
     return rows.map(rowToOrder);
@@ -351,7 +365,7 @@ export async function getOrderById(id: string): Promise<Order | null> {
     await ensureSchema();
     const rows = (await sql`
       SELECT id, created_at, status, payment_status, payment_method, payment_id,
-             customer, items, subtotal, shipping, total
+             customer, items, subtotal, shipping, discount, coupon_code, total
       FROM orders WHERE id = ${id}
     `) as OrderRow[];
     return rows[0] ? rowToOrder(rows[0]) : null;
@@ -375,15 +389,15 @@ export async function addOrder(
   if (sql) {
     await ensureSchema();
     const rows = (await sql`
-      INSERT INTO orders (id, status, payment_status, payment_method, customer, items, subtotal, shipping, total)
+      INSERT INTO orders (id, status, payment_status, payment_method, customer, items, subtotal, shipping, discount, coupon_code, total)
       VALUES (
         ${id}, 'yeni', ${paymentStatus}, ${paymentMethod},
         ${JSON.stringify(data.customer)}::jsonb,
         ${JSON.stringify(data.items)}::jsonb,
-        ${data.subtotal}, ${data.shipping}, ${data.total}
+        ${data.subtotal}, ${data.shipping}, ${data.discount ?? 0}, ${data.couponCode ?? null}, ${data.total}
       )
       RETURNING id, created_at, status, payment_status, payment_method, payment_id,
-                customer, items, subtotal, shipping, total
+                customer, items, subtotal, shipping, discount, coupon_code, total
     `) as OrderRow[];
     return rowToOrder(rows[0]);
   }
@@ -415,7 +429,7 @@ export async function setOrderPayment(
           payment_id = ${paymentId ?? null}
       WHERE id = ${id}
       RETURNING id, created_at, status, payment_status, payment_method, payment_id,
-                customer, items, subtotal, shipping, total
+                customer, items, subtotal, shipping, discount, coupon_code, total
     `) as OrderRow[];
     return rows[0] ? rowToOrder(rows[0]) : null;
   }
@@ -521,7 +535,7 @@ export async function updateOrderStatus(
     const rows = (await sql`
       UPDATE orders SET status = ${status} WHERE id = ${id}
       RETURNING id, created_at, status, payment_status, payment_method, payment_id,
-                customer, items, subtotal, shipping, total
+                customer, items, subtotal, shipping, discount, coupon_code, total
     `) as OrderRow[];
     return rows[0] ? rowToOrder(rows[0]) : null;
   }

@@ -7,6 +7,15 @@
  * Gercek maliyetlere gore admin tarafindan guncellenmesi gerekebilir.
  */
 
+export type FlowerCategory = "saksi" | "orkide" | "gul" | "kesme";
+
+export const FLOWER_CATEGORIES: { key: FlowerCategory; label: string }[] = [
+  { key: "saksi", label: "Saksı Çiçekleri" },
+  { key: "orkide", label: "Orkide" },
+  { key: "gul", label: "Gül" },
+  { key: "kesme", label: "Kesme Çiçek" },
+];
+
 export interface FlowerOption {
   id: string;
   name: string;
@@ -19,13 +28,30 @@ export interface FlowerOption {
   color: string;
   /** 3D onizlemedeki GLB modeli (public/ altinda) */
   model: string;
+  /** Secim ekraninda gruplama icin kategori */
+  category: FlowerCategory;
 }
+
+/** Kraft ambalaj icin secilebilir kagit renkleri */
+export const WRAP_COLORS: { id: string; name: string; hex: string }[] = [
+  { id: "kahverengi", name: "Kahverengi (gazete kâğıdı)", hex: "#c9b8a3" },
+  { id: "beyaz", name: "Beyaz", hex: "#f5f3ee" },
+  { id: "mavi", name: "Mavi", hex: "#3b6ea8" },
+  { id: "kirmizi", name: "Kırmızı", hex: "#b83b3b" },
+  { id: "mor", name: "Mor", hex: "#6b4c8a" },
+  { id: "pembe", name: "Pembe", hex: "#d98aa8" },
+  { id: "siyah", name: "Siyah", hex: "#2a2a2a" },
+  { id: "sari", name: "Sarı", hex: "#e0b23c" },
+  { id: "turuncu", name: "Turuncu", hex: "#d97b3c" },
+];
 
 export interface WrapOption {
   id: string;
   name: string;
   price: number;
   note: string;
+  /** Sadece "kraft" gibi kagit-sarma tiplerinde kullanicinin renk secmesine izin verilir */
+  colorable?: boolean;
 }
 
 /**
@@ -42,6 +68,7 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Tutku ve aşkın klasiği",
     color: "#c0223a",
     model: "/models/buket/gul-kirmizi.glb",
+    category: "gul",
   },
   {
     id: "pembe-gul",
@@ -51,6 +78,7 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Zarafet ve incelik",
     color: "#e88aa6",
     model: "/models/buket/gul-pembe.glb",
+    category: "gul",
   },
   {
     id: "beyaz-gul",
@@ -60,6 +88,7 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Saflık ve yeni başlangıçlar",
     color: "#f4f1ea",
     model: "/models/buket/gul-beyaz.glb",
+    category: "gul",
   },
   {
     id: "lale",
@@ -69,6 +98,7 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Bahar neşesi",
     color: "#e4572e",
     model: "/models/buket/lale.glb",
+    category: "kesme",
   },
   {
     id: "sakayik",
@@ -78,6 +108,7 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Bolluk ve romantizm",
     color: "#f2a1b7",
     model: "/models/buket/sakayik.glb",
+    category: "kesme",
   },
   {
     id: "ortanca",
@@ -87,6 +118,7 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Bulut gibi dolgun",
     color: "#8fa8d8",
     model: "/models/buket/ortanca.glb",
+    category: "kesme",
   },
   {
     id: "kazablanka",
@@ -96,6 +128,7 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Yoğun kokulu lilyum",
     color: "#f7f3e8",
     model: "/models/buket/kazablanka.glb",
+    category: "kesme",
   },
   {
     id: "orkide",
@@ -105,13 +138,13 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     note: "Uzun ömürlü ve gösterişli",
     color: "#d8b4e2",
     model: "/models/buket/orkide.glb",
+    category: "orkide",
   },
 ];
 
 export const WRAP_OPTIONS: WrapOption[] = [
-  { id: "kraft", name: "Kraft Ambalaj", price: 0, note: "Sade ve doğal" },
+  { id: "kraft", name: "Kraft Ambalaj", price: 0, note: "Sade ve doğal", colorable: true },
   { id: "luks", name: "Lüks Ambalaj + Kurdele", price: 150, note: "Özel günler için" },
-  { id: "kutu", name: "Hediye Kutusu", price: 350, note: "Şık sunum" },
   { id: "vazo", name: "Cam Vazo", price: 450, note: "Hazır sunum, uzun ömür" },
 ];
 

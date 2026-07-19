@@ -11,11 +11,14 @@ const BouquetScene = dynamic(() => import("@/components/ui/bouquet-scene"), {
 });
 import {
   DEFAULT_FLOWER_OPTIONS,
+  FLOWER_CATEGORIES,
   MIN_STEMS,
+  WRAP_COLORS,
   WRAP_OPTIONS,
   bouquetDescription,
   bouquetTotals,
   type BouquetSelection,
+  type FlowerCategory,
   type FlowerOption,
 } from "@/lib/bouquet";
 import { formatPrice, type Product } from "@/lib/products";
@@ -35,7 +38,20 @@ export default function BouquetBuilder({
   const { addItem, openCart } = useCart();
   const [stems, setStems] = useState<Record<string, number>>({});
   const [wrapId, setWrapId] = useState(WRAP_OPTIONS[0].id);
+  const [wrapColor, setWrapColor] = useState(WRAP_COLORS[0].hex);
   const [eklendi, setEklendi] = useState(false);
+  const [kategori, setKategori] = useState<FlowerCategory | "tumu">("tumu");
+  const [tasarimimEtiketi, setTasarimimEtiketi] = useState(false);
+
+  const gorunenCicekler = useMemo(
+    () =>
+      kategori === "tumu"
+        ? FLOWER_OPTIONS
+        : FLOWER_OPTIONS.filter((f) => f.category === kategori),
+    [FLOWER_OPTIONS, kategori]
+  );
+
+  const seciliKap = WRAP_OPTIONS.find((w) => w.id === wrapId) ?? WRAP_OPTIONS[0];
 
   const sel: BouquetSelection = useMemo(() => ({ stems, wrapId }), [stems, wrapId]);
   const t = useMemo(() => bouquetTotals(sel, FLOWER_OPTIONS), [sel, FLOWER_OPTIONS]);
@@ -54,16 +70,18 @@ export default function BouquetBuilder({
   const sifirla = () => {
     setStems({});
     setWrapId(WRAP_OPTIONS[0].id);
+    setTasarimimEtiketi(false);
     setEklendi(false);
   };
 
   const sepeteEkle = () => {
     if (!t.yeterli) return;
+    const aciklama = bouquetDescription(sel, FLOWER_OPTIONS);
     const urun: Product = {
       // Her ozel buket ayri satir olsun diye benzersiz id
       id: `ozel-${Date.now().toString(36)}`,
       name: "Özel Buketiniz",
-      tag: bouquetDescription(sel, FLOWER_OPTIONS),
+      tag: tasarimimEtiketi ? `${aciklama} — 🌸 Müşteri tasarımı` : aciklama,
       price: t.total,
       // Sepette gorunecek temsili gorsel: en cok secilen cicek
       image:
@@ -81,6 +99,7 @@ export default function BouquetBuilder({
     setTimeout(() => {
       setStems({});
       setWrapId(WRAP_OPTIONS[0].id);
+      setTasarimimEtiketi(false);
     }, 400);
   };
 
@@ -114,8 +133,44 @@ export default function BouquetBuilder({
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-widest text-[#e5e2e3]/40">
               1. Çiçekleri seçin
             </h3>
+
+            {/* Kategori sekmeleri */}
+            <div className="mb-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setKategori("tumu")}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  kategori === "tumu"
+                    ? "border-[#f6b6be] bg-[#f6b6be]/15 text-[#f6b6be]"
+                    : "border-white/15 text-[#e5e2e3]/60 hover:border-white/30"
+                }`}
+              >
+                Tümü
+              </button>
+              {FLOWER_CATEGORIES.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => setKategori(c.key)}
+                  className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    kategori === c.key
+                      ? "border-[#f6b6be] bg-[#f6b6be]/15 text-[#f6b6be]"
+                      : "border-white/15 text-[#e5e2e3]/60 hover:border-white/30"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {gorunenCicekler.length === 0 && (
+              <p className="mb-4 text-xs text-[#e5e2e3]/35">
+                Bu kategoride henüz çiçek yok.
+              </p>
+            )}
+
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {FLOWER_OPTIONS.map((f, i) => {
+              {gorunenCicekler.map((f, i) => {
                 const adet = stems[f.id] ?? 0;
                 return (
                   <motion.div
@@ -219,6 +274,32 @@ export default function BouquetBuilder({
                 </button>
               ))}
             </div>
+
+            {/* Kraft ambalaj rengi */}
+            {seciliKap.colorable && (
+              <div className="mt-4">
+                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-[#e5e2e3]/40">
+                  Kağıt rengi
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {WRAP_COLORS.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      title={c.name}
+                      aria-label={c.name}
+                      onClick={() => setWrapColor(c.hex)}
+                      className={`h-8 w-8 rounded-full border-2 transition-transform ${
+                        wrapColor === c.hex
+                          ? "scale-110 border-[#f6b6be]"
+                          : "border-white/20 hover:scale-105"
+                      }`}
+                      style={{ backgroundColor: c.hex }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sag: canli ozet */}
@@ -241,6 +322,8 @@ export default function BouquetBuilder({
                       stems={stems}
                       wrapId={wrapId}
                       flowers={FLOWER_OPTIONS}
+                      wrapColor={wrapColor}
+                      showBadge={tasarimimEtiketi}
                       className="absolute inset-0 h-full w-full"
                     />
                     <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/60">
@@ -249,6 +332,20 @@ export default function BouquetBuilder({
                   </>
                 )}
               </div>
+
+              {!bosMu && (
+                <button
+                  type="button"
+                  onClick={() => setTasarimimEtiketi((v) => !v)}
+                  className={`mb-4 flex w-full items-center justify-center gap-2 rounded-full border py-2 text-xs font-semibold transition-colors ${
+                    tasarimimEtiketi
+                      ? "border-[#d9594c] bg-[#d9594c]/15 text-[#d9594c]"
+                      : "border-white/15 text-[#e5e2e3]/60 hover:border-white/30"
+                  }`}
+                >
+                  🌸 Bu Benim Tasarımım Çıkartması Ekle
+                </button>
+              )}
 
               {/* Dokum */}
               <div className="space-y-2 text-sm">

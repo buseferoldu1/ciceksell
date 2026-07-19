@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { gorseliHazirla } from "@/lib/client-image";
 import { DEFAULT_FLOWER_STORIES, type FlowerStory } from "@/lib/flower-stories";
-import { DEFAULT_FLOWER_OPTIONS, type FlowerOption } from "@/lib/bouquet";
+import { DEFAULT_FLOWER_OPTIONS, FLOWER_CATEGORIES, type FlowerOption } from "@/lib/bouquet";
 import { formatPrice } from "@/lib/products";
 
 interface Props {
@@ -309,6 +309,7 @@ function FlowerEditor({
         note: "",
         color: "#d9594c",
         model: "",
+        category: "kesme",
       },
     ]);
 
@@ -372,6 +373,24 @@ function FlowerEditor({
                 value={f.note}
                 onChange={(v) => update(i, { note: v })}
               />
+              <div>
+                <span className="mb-1 block text-[11px] font-medium text-[#33323a]/60">
+                  Kategori
+                </span>
+                <select
+                  value={f.category}
+                  onChange={(e) =>
+                    update(i, { category: e.target.value as FlowerOption["category"] })
+                  }
+                  className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-[#d9594c]"
+                >
+                  {FLOWER_CATEGORIES.map((c) => (
+                    <option key={c.key} value={c.key}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[11px] text-[#33323a]/40">
                   {f.model ? "3D model: mevcut" : "3D model yok"} ·{" "}

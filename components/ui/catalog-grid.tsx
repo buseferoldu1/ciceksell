@@ -4,7 +4,15 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ArrowLeft, Search, ShoppingBag, X } from "lucide-react";
-import type { Product } from "@/lib/products";
+import { CATEGORIES, type CategoryKey, type Product } from "@/lib/products";
+
+type SortKey = "varsayilan" | "fiyat-artan" | "fiyat-azalan";
+
+const SORT_LABELS: Record<SortKey, string> = {
+  varsayilan: "Sıralama: Varsayılan",
+  "fiyat-artan": "Fiyat: Düşükten Yükseğe",
+  "fiyat-azalan": "Fiyat: Yüksekten Düşüğe",
+};
 import { useCart } from "@/components/cart/cart-context";
 import ProductCard from "./product-card";
 
@@ -37,14 +45,33 @@ export default function CatalogGrid({
 }) {
   const { addItem, count, openCart } = useCart();
   const [query, setQuery] = useState(initialQuery);
+  const [kategori, setKategori] = useState<CategoryKey | "katalog">("katalog");
+  const [sort, setSort] = useState<SortKey>("varsayilan");
 
   const filtered = useMemo(() => {
     const q = normalize(query);
-    if (!q) return products;
-    return products.filter(
-      (p) => normalize(p.name).includes(q) || normalize(p.tag).includes(q)
-    );
-  }, [products, query]);
+    let liste = products;
+    if (kategori !== "katalog") {
+      liste = liste.filter((p) => p.category === kategori);
+    }
+    if (q) {
+      liste = liste.filter(
+        (p) => normalize(p.name).includes(q) || normalize(p.tag).includes(q)
+      );
+    }
+    if (sort === "fiyat-artan") {
+      liste = [...liste].sort((a, b) => a.price - b.price);
+    } else if (sort === "fiyat-azalan") {
+      liste = [...liste].sort((a, b) => b.price - a.price);
+    }
+    return liste;
+  }, [products, query, kategori, sort]);
+
+  const kategoriSayaci = useMemo(() => {
+    const sayac: Partial<Record<CategoryKey, number>> = {};
+    for (const p of products) sayac[p.category] = (sayac[p.category] ?? 0) + 1;
+    return sayac;
+  }, [products]);
 
   return (
     <div className="min-h-screen bg-[#131314] text-[#e5e2e3]">
@@ -96,6 +123,20 @@ export default function CatalogGrid({
               )}
             </div>
 
+            {/* Fiyat sıralama */}
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              aria-label="Sıralama"
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2.5 text-xs text-[#e5e2e3] outline-none focus:border-[#f6b6be]/60"
+            >
+              {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+                <option key={k} value={k} className="bg-[#131314]">
+                  {SORT_LABELS[k]}
+                </option>
+              ))}
+            </select>
+
             <motion.button
               type="button"
               onClick={openCart}
@@ -112,6 +153,28 @@ export default function CatalogGrid({
               )}
             </motion.button>
           </div>
+        </div>
+
+        {/* Kategori filtresi */}
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-6 pb-4 lg:px-10">
+          {CATEGORIES.map((c) => {
+            const sayi = c.key === "katalog" ? products.length : kategoriSayaci[c.key] ?? 0;
+            if (c.key !== "katalog" && sayi === 0) return null;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setKategori(c.key)}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  kategori === c.key
+                    ? "border-[#f6b6be] bg-[#f6b6be]/15 text-[#f6b6be]"
+                    : "border-white/15 text-[#e5e2e3]/60 hover:border-white/30"
+                }`}
+              >
+                {c.label} <span className="text-[#e5e2e3]/40">({sayi})</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

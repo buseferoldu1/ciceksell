@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { addOrder, getOrders, getProducts, type PaymentMethod } from "@/lib/store";
 import { isAdmin } from "@/lib/admin-key";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/products";
+import { computeOrderTotals } from "@/lib/products";
 import { bankActive } from "@/lib/site";
 import { getContactSettings } from "@/lib/store";
 
@@ -71,8 +71,10 @@ export async function POST(req: Request) {
   if (subtotal <= 0) {
     return NextResponse.json({ error: "Geçersiz sepet tutarı" }, { status: 400 });
   }
-  const shipping =
-    subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const { shipping, discount, total, couponCode } = computeOrderTotals(
+    subtotal,
+    typeof body?.couponCode === "string" ? body.couponCode : undefined
+  );
 
   const order = await addOrder({
     customer: {
@@ -88,7 +90,9 @@ export async function POST(req: Request) {
     items,
     subtotal,
     shipping,
-    total: subtotal + shipping,
+    discount,
+    couponCode,
+    total,
     paymentStatus: "beklemede",
     paymentMethod: method,
   });

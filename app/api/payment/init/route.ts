@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { addOrder, getProducts, setOrderPayment } from "@/lib/store";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "@/lib/products";
+import { computeOrderTotals } from "@/lib/products";
 import {
   initCheckoutForm,
   isIyzicoConfigured,
@@ -69,9 +69,10 @@ export async function POST(req: Request) {
   if (subtotal <= 0) {
     return NextResponse.json({ error: "Geçersiz sepet tutarı" }, { status: 400 });
   }
-  const shipping =
-    subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shipping;
+  const { shipping, discount, total, couponCode } = computeOrderTotals(
+    subtotal,
+    typeof body?.couponCode === "string" ? body.couponCode : undefined
+  );
 
   // Once siparisi "beklemede" olarak kaydet; callback'te "odendi" yapilir.
   const order = await addOrder({
@@ -88,6 +89,8 @@ export async function POST(req: Request) {
     items,
     subtotal,
     shipping,
+    discount,
+    couponCode,
     total,
     paymentStatus: "beklemede",
     paymentMethod: "kart",
@@ -111,6 +114,17 @@ export async function POST(req: Request) {
       category1: "Kargo",
       itemType: "PHYSICAL",
       price: tl(shipping),
+    });
+  }
+  if (discount > 0) {
+    // Basket toplami price/paidPrice ile birebir esit olmali; indirimi
+    // negatif kalemle yansitiyoruz.
+    basketItems.push({
+      id: "indirim",
+      name: `Kupon indirimi (${couponCode ?? ""})`,
+      category1: "İndirim",
+      itemType: "PHYSICAL",
+      price: tl(-discount),
     });
   }
 

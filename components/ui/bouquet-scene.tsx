@@ -281,13 +281,12 @@ function yerlesimAyarlari(kapId: string) {
       // Vazonun agzinin hemen altindan baslar; sap ucu vazo icinde gizli
       // kalir, tomurcuklar agizdan yukari tasar. Vazonun dar agzindan
       // tasmasin diye yaricap sikica sinirlanir.
-      return { pivotY: 0.32, tiltBase: 0.26, jitter: 0.02, maxRadius: 0.115 };
-    case "kutu":
-      // Kutunun agzinin hemen altindan baslar; kutunun kenarindan tasmasin
-      return { pivotY: 0.24, tiltBase: 0.22, jitter: 0.018, maxRadius: 0.17 };
+      return { pivotY: 0.32, tiltBase: 0.3, jitter: 0.05, maxRadius: 0.14 };
     default:
-      // Kraft/luks kagit sarma: serbest, dogal yelpaze acilimi
-      return { pivotY: 0.07, tiltBase: 0.5, jitter: 0.014, maxRadius: 0.34 };
+      // Kraft/luks kagit sarma: serbest, dogal yelpaze acilimi. Jitter
+      // buyutuldu ki dallarin bagli noktasi tek bir noktada ust uste
+      // binmesin, her dal gorsel olarak ayri bir sap gibi ayirt edilsin.
+      return { pivotY: 0.07, tiltBase: 0.5, jitter: 0.05, maxRadius: 0.34 };
   }
 }
 
@@ -305,10 +304,12 @@ function Sahne({
   stems,
   wrapId,
   flowers,
+  wrapColor,
 }: {
   stems: Record<string, number>;
   wrapId: string;
   flowers: FlowerOption[];
+  wrapColor?: string;
 }) {
   const grupRef = useRef<THREE.Group>(null);
 
@@ -351,7 +352,6 @@ function Sahne({
 
   const kap = WRAP_OPTIONS.find((w) => w.id === wrapId) ?? WRAP_OPTIONS[0];
   const vazoda = kap.id === "vazo";
-  const kutuda = kap.id === "kutu";
   const { pivotY, tiltBase, jitter, maxRadius } = yerlesimAyarlari(kap.id);
 
   // Dal sayisina gore yayilma olcegi + konteynerin agzina gore mutlak tavan
@@ -373,10 +373,9 @@ function Sahne({
       <group ref={grupRef}>
         {/* Kap */}
         {vazoda && <Kap url="/models/buket/vazo.glb" hedefYukseklik={0.46} />}
-        {kutuda && <Kap url="/models/buket/hediye-kutusu.glb" hedefYukseklik={0.4} />}
-        {!vazoda && !kutuda && (
+        {!vazoda && (
           <KagitSarma
-            renk={kap.id === "luks" ? "#f6b6be" : "#c9b8a3"}
+            renk={kap.id === "luks" ? "#f6b6be" : wrapColor || "#c9b8a3"}
             yukseklik={sarmaYukseklik}
             ustYaricap={sarmaUstYaricap}
           />
@@ -414,11 +413,15 @@ export default function BouquetScene({
   wrapId,
   flowers = DEFAULT_FLOWER_OPTIONS,
   className = "",
+  wrapColor,
+  showBadge = false,
 }: {
   stems: Record<string, number>;
   wrapId: string;
   flowers?: FlowerOption[];
   className?: string;
+  wrapColor?: string;
+  showBadge?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [gorunur, setGorunur] = useState(false);
@@ -457,7 +460,7 @@ export default function BouquetScene({
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
-            <Sahne stems={stems} wrapId={wrapId} flowers={flowers} />
+            <Sahne stems={stems} wrapId={wrapId} flowers={flowers} wrapColor={wrapColor} />
           </Suspense>
           <OrbitControls
             enablePan={false}
@@ -473,6 +476,11 @@ export default function BouquetScene({
           +{dalSayisi - MAX_GORUNUR} dal daha (fiyata dahil)
         </span>
       )}
+      {showBadge && (
+        <span className="pointer-events-none absolute right-2 top-2 -rotate-6 rounded-full border-2 border-white bg-[#d9594c] px-3 py-1.5 text-[11px] font-bold text-white shadow-lg">
+          🌸 Bu benim tasarımım
+        </span>
+      )}
     </div>
   );
 }
@@ -480,4 +488,3 @@ export default function BouquetScene({
 // GLB'leri onceden yukle (ilk etkilesim akici olsun)
 DEFAULT_FLOWER_OPTIONS.forEach((f) => f.model && useGLTF.preload(f.model));
 useGLTF.preload("/models/buket/vazo.glb");
-useGLTF.preload("/models/buket/hediye-kutusu.glb");

@@ -14,11 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-context";
-import {
-  formatPrice,
-  FREE_SHIPPING_THRESHOLD,
-  SHIPPING_FEE,
-} from "@/lib/products";
+import { formatPrice, computeOrderTotals } from "@/lib/products";
 import { bankActive } from "@/lib/site";
 import { useContactSettings } from "@/components/site-settings-context";
 import FallingPetals from "@/components/ui/falling-petals";
@@ -57,10 +53,27 @@ export default function OdemePage() {
   const [status, setStatus] = useState<"form" | "processing">("form");
   const [genelHata, setGenelHata] = useState("");
   const [teslimatTarihi, setTeslimatTarihi] = useState<Date>(new Date());
+  const [kuponGirdi, setKuponGirdi] = useState("");
+  const [kuponUygulanan, setKuponUygulanan] = useState<string | undefined>();
+  const [kuponHata, setKuponHata] = useState("");
 
-  const shipping =
-    subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const total = subtotal + shipping;
+  const { shipping, discount, total } =
+    subtotal === 0
+      ? { shipping: 0, discount: 0, total: 0 }
+      : computeOrderTotals(subtotal, kuponUygulanan);
+
+  const kuponUygula = () => {
+    const kod = kuponGirdi.trim();
+    if (!kod) return;
+    const deneme = computeOrderTotals(subtotal, kod);
+    if (deneme.discount <= 0) {
+      setKuponHata("Geçersiz kupon kodu");
+      setKuponUygulanan(undefined);
+      return;
+    }
+    setKuponHata("");
+    setKuponUygulanan(kod);
+  };
 
   // Kart odemesinde e-posta zorunlu (iyzico icin); digerlerinde opsiyonel
   const epostaGerekli = yontem === "kart";
@@ -115,7 +128,7 @@ export default function OdemePage() {
         const res = await fetch("/api/payment/init", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ customer, items: cartItems }),
+          body: JSON.stringify({ customer, items: cartItems, couponCode: kuponUygulanan }),
         });
         const data = await res.json();
         if (!res.ok || !data?.paymentPageUrl) {
@@ -129,7 +142,12 @@ export default function OdemePage() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customer, items: cartItems, paymentMethod: yontem }),
+        body: JSON.stringify({
+          customer,
+          items: cartItems,
+          paymentMethod: yontem,
+          couponCode: kuponUygulanan,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data?.id) {
@@ -446,7 +464,52 @@ export default function OdemePage() {
                 </div>
               ))}
             </div>
-            <div className="mt-6 space-y-1 border-t border-white/10 pt-4 text-sm text-[#e5e2e3]/70">
+            {/* Kupon kodu */}
+            <div className="mt-6 border-t border-white/10 pt-4">
+              <label className="mb-1.5 block text-xs font-medium text-[#e5e2e3]/60">
+                Kupon Kodu
+              </label>
+              {kuponUygulanan ? (
+                <div className="flex items-center justify-between rounded-lg border border-[#f6b6be]/40 bg-[#f6b6be]/10 px-3 py-2 text-sm text-[#f6b6be]">
+                  <span>
+                    {kuponUygulanan.toUpperCase()} uygulandı (-{formatPrice(discount)})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setKuponUygulanan(undefined);
+                      setKuponGirdi("");
+                      setKuponHata("");
+                    }}
+                    className="text-xs text-[#e5e2e3]/50 underline hover:text-[#e5e2e3]"
+                  >
+                    Kaldır
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={kuponGirdi}
+                    onChange={(e) => setKuponGirdi(e.target.value)}
+                    placeholder="Örn. ciceksel200"
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-[#e5e2e3] placeholder-[#e5e2e3]/30 outline-none focus:border-[#f6b6be]/60"
+                  />
+                  <button
+                    type="button"
+                    onClick={kuponUygula}
+                    className="shrink-0 rounded-lg border border-[#f6b6be]/40 px-4 py-2 text-xs font-semibold text-[#f6b6be] transition-colors hover:bg-[#f6b6be]/10"
+                  >
+                    Uygula
+                  </button>
+                </div>
+              )}
+              {kuponHata && (
+                <p className="mt-1.5 text-xs text-red-400">{kuponHata}</p>
+              )}
+            </div>
+
+            <div className="mt-4 space-y-1 border-t border-white/10 pt-4 text-sm text-[#e5e2e3]/70">
               <div className="flex justify-between">
                 <span>Ara Toplam</span>
                 <span>{formatPrice(subtotal)}</span>
@@ -455,6 +518,12 @@ export default function OdemePage() {
                 <span>Teslimat</span>
                 <span>{shipping === 0 ? "Ücretsiz" : formatPrice(shipping)}</span>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-[#f6b6be]">
+                  <span>İndirim</span>
+                  <span>-{formatPrice(discount)}</span>
+                </div>
+              )}
               <div className="mt-2 flex justify-between border-t border-white/10 pt-3 font-serif text-lg font-bold text-[#e5e2e3]">
                 <span>Toplam</span>
                 <span className="text-[#f6b6be]">{formatPrice(total)}</span>

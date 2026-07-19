@@ -22,7 +22,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { formatPrice, type Product } from "@/lib/products";
+import { formatPrice, CATEGORIES, type CategoryKey, type Product } from "@/lib/products";
 import AdminLogin from "@/components/ui/admin-login";
 import { StatsCard } from "@/components/ui/stats-card-1";
 import { gorseliHazirla } from "@/lib/client-image";
@@ -74,9 +74,16 @@ interface ProductForm {
   tag: string;
   price: string;
   image: string;
+  category: CategoryKey;
 }
 
-const EMPTY_PRODUCT: ProductForm = { name: "", tag: "", price: "", image: "" };
+const EMPTY_PRODUCT: ProductForm = {
+  name: "",
+  tag: "",
+  price: "",
+  image: "",
+  category: "karisik",
+};
 
 export default function AdminPage() {
   const [key, setKey] = useState<string | null>(null);
@@ -244,7 +251,13 @@ export default function AdminPage() {
     setPform(
       p === "yeni"
         ? EMPTY_PRODUCT
-        : { name: p.name, tag: p.tag, price: String(p.price), image: p.image }
+        : {
+            name: p.name,
+            tag: p.tag,
+            price: String(p.price),
+            image: p.image,
+            category: p.category,
+          }
     );
   };
 
@@ -280,6 +293,7 @@ export default function AdminPage() {
         tag: pform.tag.trim(),
         price,
         image: pform.image,
+        category: pform.category,
       });
       const res =
         editing === "yeni"
@@ -580,6 +594,19 @@ export default function AdminPage() {
                         <span>{formatPrice(i.price * i.qty)}</span>
                       </div>
                     ))}
+                    {o.discount > 0 && (
+                      <div className="flex justify-between border-b border-black/5 py-1.5 text-[#d9594c]">
+                        <span>
+                          İndirim{" "}
+                          {o.couponCode && (
+                            <span className="text-[#33323a]/40">
+                              ({o.couponCode.toUpperCase()})
+                            </span>
+                          )}
+                        </span>
+                        <span>-{formatPrice(o.discount)}</span>
+                      </div>
+                    )}
                     <div className="mt-2 flex justify-between font-serif text-base font-bold">
                       <span>Toplam</span>
                       <span className="text-[#d9594c]">
@@ -800,6 +827,22 @@ export default function AdminPage() {
                       className="w-full rounded-lg border border-black/10 py-2.5 pl-8 pr-3 text-sm outline-none focus:border-[#d9594c]"
                     />
                   </div>
+                  <select
+                    value={pform.category}
+                    onChange={(e) =>
+                      setPform((f) => ({
+                        ...f,
+                        category: e.target.value as CategoryKey,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-black/10 px-3 py-2.5 text-sm outline-none focus:border-[#d9594c]"
+                  >
+                    {CATEGORIES.filter((c) => c.key !== "katalog").map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
