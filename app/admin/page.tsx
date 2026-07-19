@@ -585,13 +585,20 @@ export default function AdminPage() {
                     {o.items.map((i) => (
                       <div
                         key={i.id}
-                        className="flex justify-between border-b border-black/5 py-1.5"
+                        className="border-b border-black/5 py-1.5"
                       >
-                        <span>
-                          {i.name}{" "}
-                          <span className="text-[#33323a]/40">× {i.qty}</span>
-                        </span>
-                        <span>{formatPrice(i.price * i.qty)}</span>
+                        <div className="flex justify-between">
+                          <span>
+                            {i.name}{" "}
+                            <span className="text-[#33323a]/40">× {i.qty}</span>
+                          </span>
+                          <span>{formatPrice(i.price * i.qty)}</span>
+                        </div>
+                        {i.detail && (
+                          <p className="mt-0.5 text-xs text-[#33323a]/50">
+                            {i.detail}
+                          </p>
+                        )}
                       </div>
                     ))}
                     {o.discount > 0 && (

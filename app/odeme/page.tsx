@@ -121,6 +121,7 @@ export default function OdemePage() {
       name: i.name,
       price: i.price,
       qty: i.qty,
+      detail: i.id.startsWith("ozel-") ? i.tag : undefined,
     }));
 
     try {

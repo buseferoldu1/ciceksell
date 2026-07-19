@@ -59,6 +59,7 @@ export async function POST(req: Request) {
       name: String(i.name).slice(0, 200),
       price,
       qty: Math.max(1, Math.min(99, Number(i.qty) || 1)),
+      detail: i.detail ? String(i.detail).slice(0, 400) : undefined,
     };
   });
 

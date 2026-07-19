@@ -41,6 +41,8 @@ export interface OrderItem {
   name: string;
   price: number;
   qty: number;
+  /** Ozel buketlerde dal dal icerik (orn. "5 Şakayık Pembe, 3 Kazablanka — Kraft Ambalaj") */
+  detail?: string;
 }
 
 /** Sifre hash'i asla istemciye gonderilmez. */

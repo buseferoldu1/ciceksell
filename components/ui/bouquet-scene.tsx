@@ -163,7 +163,14 @@ function Cicek({
         <cylinderGeometry args={[SAP_UST_YARICAP, SAP_ALT_YARICAP, sapBoyu, 6]} />
         <meshStandardMaterial color="#5a7d4f" roughness={0.75} />
       </mesh>
-      <primitive object={klon} />
+      {/* Dalin kendi etrafinda yayilma acisini (rotationY) burada iptal
+          ediyoruz: aksi halde yon-bagimli (disk seklinde) ciceklerin basi
+          hangi dal oldugundan tesadufi bir yone bakar. Boylece tum ciceklerin
+          basi her zaman ayni (yukari/one) yone bakar; sadece disariya dogru
+          egim (tilt) korunur. */}
+      <group rotation={[0, -rotationY, 0]}>
+        <primitive object={klon} />
+      </group>
     </group>
   );
 }

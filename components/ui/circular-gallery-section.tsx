@@ -14,8 +14,11 @@ export default function CircularGallerySection({
   products: Product[];
 }) {
   const { addItem } = useCart();
-  // Cembere sigacak kadar urun goster (fazlasi ust uste biner)
-  const featured = products.slice(0, 12);
+  // Premium (3D modelli) urunler one alinir, cembere sigacak kadar urun
+  // goster (fazlasi ust uste biner)
+  const premium = products.filter((p) => p.model);
+  const digerleri = products.filter((p) => !p.model);
+  const featured = [...premium, ...digerleri].slice(0, 12);
   if (featured.length === 0) return null;
 
   return <CircularGallery items={featured} onAdd={addItem} />;
