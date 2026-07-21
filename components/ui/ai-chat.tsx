@@ -136,7 +136,7 @@ export default function AiChat({ products }: { products: Product[] }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
-            className="fixed right-5 top-[calc(50%+0.5rem)] z-[60] flex h-[min(30rem,55vh)] w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-2xl"
+            className="fixed bottom-5 right-5 top-auto z-[60] flex h-[min(30rem,80dvh)] w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-2xl"
           >
             {/* Baslik */}
             <div className="flex items-center gap-3 border-b border-black/5 bg-[#f4f2ef] px-5 py-3.5">

@@ -71,7 +71,7 @@ const CICEK_HACIM_HEDEFI = 0.218;
 const MODEL_DUZELTME: Record<string, [number, number, number]> = {
   "/models/buket/sakayik.glb": [-Math.PI / 2, 0, 0],
   "/models/buket/sakayik-beyaz.glb": [-Math.PI / 2, 0, 0],
-  "/models/buket/ay-cicegi.glb": [-Math.PI / 2, 0, 0],
+  "/models/buket/ay-cicegi.glb": [Math.PI / 2, 0, 0],
   "/models/buket/orkide.glb": [-Math.PI / 2, 0, 0],
   "/models/buket/kazablanka.glb": [-Math.PI / 2, 0, 0],
 };
