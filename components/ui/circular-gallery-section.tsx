@@ -14,11 +14,15 @@ export default function CircularGallerySection({
   products: Product[];
 }) {
   const { addItem } = useCart();
-  // Premium (3D modelli) urunler one alinir, cembere sigacak kadar urun
-  // goster (fazlasi ust uste biner)
-  const premium = products.filter((p) => p.model);
-  const digerleri = products.filter((p) => !p.model);
-  const featured = [...premium, ...digerleri].slice(0, 12);
+  // En premium (fiyati en yuksek) urunler one cikarilir; 3D modelli
+  // urunler esit fiyatta oncelikli sayilir. Cembere sigacak kadar urun
+  // gosterilir (fazlasi ust uste biner)
+  const featured = [...products]
+    .sort((a, b) => {
+      if (b.price !== a.price) return b.price - a.price;
+      return (b.model ? 1 : 0) - (a.model ? 1 : 0);
+    })
+    .slice(0, 12);
   if (featured.length === 0) return null;
 
   return <CircularGallery items={featured} onAdd={addItem} />;

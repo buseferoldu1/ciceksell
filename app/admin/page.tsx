@@ -562,8 +562,14 @@ export default function AdminPage() {
                   <div className="rounded-xl bg-[#f4f2ef] p-4 text-sm">
                     <div className="font-semibold">{o.customer.name}</div>
                     <div className="text-[#33323a]/60">{o.customer.phone}</div>
+                    {o.customer.recipientName && (
+                      <div className="mt-1 text-[#33323a]/60">
+                        Alıcı: <span className="font-medium">{o.customer.recipientName}</span>
+                      </div>
+                    )}
                     <div className="mt-1 text-[#33323a]/60">
                       {o.customer.address}
+                      {o.customer.district ? ` — ${o.customer.district}` : ""}
                     </div>
                     {o.customer.deliveryDate && (
                       <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#d9594c]/10 px-2.5 py-1 text-xs font-semibold text-[#d9594c]">

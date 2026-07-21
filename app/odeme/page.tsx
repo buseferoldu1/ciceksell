@@ -25,12 +25,28 @@ const ADIMLAR = ["Sepet", "Teslimat", "Ödeme"];
 
 type Yontem = "kart" | "havale" | "kapida";
 
+/** Teslimat yaptigimiz Ankara ilceleri */
+const ILCELER = [
+  "Gölbaşı",
+  "Mamak",
+  "Keçiören",
+  "Altındağ",
+  "Çankaya",
+  "Pursaklar",
+  "Yenimahalle",
+  "Sincan",
+  "Etimesgut",
+];
+
 interface FormState {
   name: string;
   phone: string;
   email: string;
   address: string;
   note: string;
+  /** Cicegin teslim edilecegi kisi (siparisi veren farkli olabilir) */
+  recipientName: string;
+  district: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -39,6 +55,8 @@ const EMPTY_FORM: FormState = {
   email: "",
   address: "",
   note: "",
+  recipientName: "",
+  district: "",
 };
 
 const gecerliEposta = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
@@ -81,7 +99,9 @@ export default function OdemePage() {
     form.name.trim().length >= 3 &&
     form.phone.replace(/\D/g, "").length >= 10 &&
     (!epostaGerekli || gecerliEposta(form.email)) &&
-    form.address.trim().length >= 10;
+    form.address.trim().length >= 10 &&
+    form.recipientName.trim().length >= 3 &&
+    !!form.district;
   const aktifAdim = teslimatTamam ? 2 : 1;
 
   const set =
@@ -98,6 +118,8 @@ export default function OdemePage() {
     if (epostaGerekli && !gecerliEposta(form.email))
       next.email = "Geçerli e-posta girin";
     if (form.address.trim().length < 10) next.address = "Teslimat adresi girin";
+    if (form.recipientName.trim().length < 3) next.recipientName = "Alıcı ismi girin";
+    if (!form.district) next.district = "İlçe seçin";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -115,6 +137,8 @@ export default function OdemePage() {
       address: form.address,
       note: form.note || undefined,
       deliveryDate: teslimatTarihi.toISOString().slice(0, 10),
+      recipientName: form.recipientName,
+      district: form.district,
     };
     const cartItems = items.map((i) => ({
       id: i.id,
@@ -313,6 +337,36 @@ export default function OdemePage() {
                   />
                   {errors.address && (
                     <p className="mt-1 text-xs text-red-400">{errors.address}</p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    placeholder="Alıcı İsmi (çiçeği teslim alacak kişi)"
+                    value={form.recipientName}
+                    onChange={set("recipientName")}
+                    className={inputCls(errors.recipientName)}
+                  />
+                  {errors.recipientName && (
+                    <p className="mt-1 text-xs text-red-400">{errors.recipientName}</p>
+                  )}
+                </div>
+                <div>
+                  <select
+                    value={form.district}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, district: e.target.value }))
+                    }
+                    className={inputCls(errors.district)}
+                  >
+                    <option value="">İlçe seçin (Ankara)</option>
+                    {ILCELER.map((ilce) => (
+                      <option key={ilce} value={ilce} className="bg-[#1c1c1e]">
+                        {ilce}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.district && (
+                    <p className="mt-1 text-xs text-red-400">{errors.district}</p>
                   )}
                 </div>
                 <div className="sm:col-span-2">

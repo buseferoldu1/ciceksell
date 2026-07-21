@@ -20,9 +20,9 @@ interface Slide {
 
 const SLIDE_DEFS: Slide[] = [
   {
-    script: "Düğün",
-    headlineTop: "Beyazın",
-    headlineBottom: "Zarafeti",
+    script: "Prestij",
+    headlineTop: "Zarafetin",
+    headlineBottom: "Işıltısı",
     productId: "k30", // 21li Beyaz Lale Lüx
     heroImage: "/flowers/beyaz-zarafet.jpg",
   },
@@ -77,6 +77,18 @@ export default function BloomHero({ products }: { products?: Product[] }) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.5 }}
+                className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#d9594c]/30 bg-[#d9594c]/10 px-4 py-1.5 text-xs font-semibold text-[#d9594c]"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>
+                  <strong className="font-bold">ciceksel200</strong> koduyla
+                  200₺ indirim
+                </span>
+              </motion.div>
               <h1 className="font-serif text-6xl font-bold leading-[0.95] tracking-tight text-[#33323a] lg:text-8xl">
                 {slide.headlineTop}
                 <br />

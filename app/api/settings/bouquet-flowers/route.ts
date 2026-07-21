@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { FlowerCategory, FlowerOption } from "@/lib/bouquet";
 
-const GECERLI_KATEGORILER: FlowerCategory[] = ["saksi", "orkide", "gul", "kesme"];
+const GECERLI_KATEGORILER: FlowerCategory[] = ["saksi", "orkide", "gul", "kesme", "celenk"];
 import { getBouquetFlowers, setBouquetFlowers } from "@/lib/store";
 import { isAdmin } from "@/lib/admin-key";
 

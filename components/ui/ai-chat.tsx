@@ -106,14 +106,19 @@ export default function AiChat({ products }: { products: Product[] }) {
         whileTap={{ scale: 0.92 }}
         className="group fixed right-5 top-[calc(50%-3.5rem)] z-[60] flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[#d9594c] text-white shadow-lg shadow-[#d9594c]/30 transition-colors hover:bg-[#c2493d]"
       >
+        {/* Dikkat ceken nabiz halkasi — mobilde hover olmadigi icin butonun
+            tiklanabilir oldugu bu sekilde vurgulanir */}
+        {!open && (
+          <span className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-[#d9594c]/40 [animation-duration:2.5s]" />
+        )}
         <AnimatePresence mode="wait" initial={false}>
           {open ? (
             <motion.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-              <X className="h-5 w-5" />
+              <X className="relative h-5 w-5" />
             </motion.span>
           ) : (
             <motion.span key="f" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-              <Flower2 className="h-5 w-5" />
+              <Flower2 className="relative h-5 w-5" />
             </motion.span>
           )}
         </AnimatePresence>

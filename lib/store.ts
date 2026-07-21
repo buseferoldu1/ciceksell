@@ -75,6 +75,10 @@ export interface Order {
     note?: string;
     /** Musterinin sectigi teslimat tarihi (ISO, yyyy-MM-dd) */
     deliveryDate?: string;
+    /** Cicegin teslim edilecegi kisi (siparisi veren farkli olabilir) */
+    recipientName?: string;
+    /** Teslimat ilcesi (Ankara ici) */
+    district?: string;
   };
   items: OrderItem[];
   subtotal: number;

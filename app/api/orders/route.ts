@@ -87,6 +87,10 @@ export async function POST(req: Request) {
       deliveryDate: customer.deliveryDate
         ? String(customer.deliveryDate).slice(0, 10)
         : undefined,
+      recipientName: customer.recipientName
+        ? String(customer.recipientName).slice(0, 120)
+        : undefined,
+      district: customer.district ? String(customer.district).slice(0, 60) : undefined,
     },
     items,
     subtotal,

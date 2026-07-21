@@ -7,13 +7,14 @@
  * Gercek maliyetlere gore admin tarafindan guncellenmesi gerekebilir.
  */
 
-export type FlowerCategory = "saksi" | "orkide" | "gul" | "kesme";
+export type FlowerCategory = "saksi" | "orkide" | "gul" | "kesme" | "celenk";
 
 export const FLOWER_CATEGORIES: { key: FlowerCategory; label: string }[] = [
   { key: "saksi", label: "Saksı Çiçekleri" },
   { key: "orkide", label: "Orkide" },
   { key: "gul", label: "Gül" },
   { key: "kesme", label: "Kesme Çiçek" },
+  { key: "celenk", label: "Çelenk" },
 ];
 
 export interface FlowerOption {
@@ -127,7 +128,10 @@ export const DEFAULT_FLOWER_OPTIONS: FlowerOption[] = [
     image: "/flowers/katalog/kazablanka-mix.jpg",
     note: "Yoğun kokulu lilyum",
     color: "#f7f3e8",
-    model: "/models/buket/kazablanka.glb",
+    // NOT: kazablanka.glb kaynak modeli gercekte bir lilyum degil, yesil
+    // yaprakli kucuk bir bitkiye benziyor (dogru olmayan 3D varlik).
+    // Duzeltilene kadar zarif beyaz lale modeli gorsel olarak kullaniliyor.
+    model: "/models/buket/lale-beyaz.glb",
     category: "kesme",
   },
   {

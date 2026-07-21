@@ -21,9 +21,9 @@ const FAQS = [
       "Teslimat saatinden en az 4 saat öncesine kadar siparişinizi ücretsiz olarak iptal edebilir veya değiştirebilirsiniz.",
   },
   {
-    question: "Hangi şehirlere teslimat yapıyorsunuz?",
+    question: "Hangi bölgelere teslimat yapıyorsunuz?",
     answer:
-      "Türkiye genelinde 50'den fazla şehre teslimat yapıyoruz. Teslimat süresi bulunduğunuz bölgeye göre değişebilir.",
+      "Ankara genelinde teslimat yapıyoruz. Gölbaşı, Mamak, Keçiören, Altındağ, Çankaya, Pursaklar, Yenimahalle, Sincan ve Etimesgut dahil tüm ilçelere aynı gün teslimat sağlıyoruz.",
   },
   {
     question: "İade politikanız nedir?",

@@ -157,6 +157,29 @@ function Cicek({
     return { klon: c, sapBoyu: sap };
   }, [scene, url]);
 
+  // Yon-bagimli (disk/duz seklinde) ciceklerin basi HER ZAMAN dik yukari
+  // baksin diye dal egimi (tilt) de basa uygulanmaz — yalnizca sap egilir,
+  // cicek basinin dunya-uzayindaki rotasyonu sifirlanir.
+  const dikDursun = MODEL_DUZELTME[url] !== undefined;
+
+  // Ic grubun rotasyonunu QUATERNION ile hesapliyoruz: Euler acilarini
+  // basitce eksi isaretle "iptal etmeye" calismak yanlis sonuc verir,
+  // cunku X ve Y rotasyonlari komute etmez (sirali carpim tersinir degil).
+  // Dogru iptal, dis grubun rotasyonunun matematiksel tersidir.
+  const icRotasyon = useMemo(() => {
+    const disKuaterniyon = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(tilt, rotationY, 0, "XYZ")
+    );
+    if (dikDursun) {
+      // Basi tamamen dik tutmak icin dis rotasyonun tam tersini uygula
+      return disKuaterniyon.clone().invert();
+    }
+    // Sadece yayilma acisini (Y) iptal et, disariya dogru egim (tilt) kalsin
+    return new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(0, -rotationY, 0, "XYZ")
+    );
+  }, [tilt, rotationY, dikDursun]);
+
   return (
     <group position={position} rotation={[tilt, rotationY, 0]}>
       <mesh position={[0, sapBoyu / 2, 0]}>
@@ -167,8 +190,9 @@ function Cicek({
           ediyoruz: aksi halde yon-bagimli (disk seklinde) ciceklerin basi
           hangi dal oldugundan tesadufi bir yone bakar. Boylece tum ciceklerin
           basi her zaman ayni (yukari/one) yone bakar; sadece disariya dogru
-          egim (tilt) korunur. */}
-      <group rotation={[0, -rotationY, 0]}>
+          egim (tilt) korunur. Dik durmasi gereken turlerde egim de iptal
+          edilir, basi kesinlikle yukari bakar. */}
+      <group quaternion={icRotasyon}>
         <primitive object={klon} />
       </group>
     </group>
