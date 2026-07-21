@@ -140,10 +140,10 @@ export default function AiChat({ products }: { products: Product[] }) {
           >
             {/* Baslik */}
             <div className="flex items-center gap-3 border-b border-black/5 bg-[#f4f2ef] px-5 py-3.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#d9594c]/10">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d9594c]/10">
                 <Flower2 className="h-4 w-4 text-[#d9594c]" />
               </span>
-              <div className="leading-tight">
+              <div className="min-w-0 flex-1 leading-tight">
                 <div className="text-sm font-bold text-[#33323a]">
                   Çiçeksel Asistanı
                 </div>
@@ -151,6 +151,14 @@ export default function AiChat({ products }: { products: Product[] }) {
                   Genelde anında yanıtlar
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Asistanı kapat"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#33323a]/50 transition-colors hover:bg-black/5 hover:text-[#33323a]"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
             {/* Mesajlar */}
