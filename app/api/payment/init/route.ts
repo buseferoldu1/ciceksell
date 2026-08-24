@@ -142,6 +142,13 @@ export async function POST(req: Request) {
     (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
     "85.34.78.112";
 
+  // Teslimat yalnizca Ankara icinde; adres dogrulamasi (AVS/fraud kontrolu)
+  // sehir alaniyla celismesin diye "Istanbul" yerine gercek il/ilce kullanilir.
+  const ilce = customer.district ? String(customer.district) : "";
+  const acikAdres = ilce
+    ? `${String(customer.address).slice(0, 480)}, ${ilce}/Ankara`
+    : String(customer.address).slice(0, 500);
+
   try {
     const result = await initCheckoutForm({
       conversationId: order.id,
@@ -157,22 +164,24 @@ export async function POST(req: Request) {
         email: String(customer.email),
         // TCKN toplamiyoruz; iyzico Odeme Formu placeholder kabul eder
         identityNumber: "11111111111",
-        registrationAddress: String(customer.address).slice(0, 500),
-        city: "İstanbul",
+        registrationAddress: acikAdres.slice(0, 500),
+        city: "Ankara",
         country: "Türkiye",
         ip,
       },
       shippingAddress: {
-        contactName: String(customer.name),
-        city: "İstanbul",
+        contactName: customer.recipientName
+          ? String(customer.recipientName)
+          : String(customer.name),
+        city: "Ankara",
         country: "Türkiye",
-        address: String(customer.address).slice(0, 500),
+        address: acikAdres.slice(0, 500),
       },
       billingAddress: {
         contactName: String(customer.name),
-        city: "İstanbul",
+        city: "Ankara",
         country: "Türkiye",
-        address: String(customer.address).slice(0, 500),
+        address: acikAdres.slice(0, 500),
       },
       basketItems,
     });

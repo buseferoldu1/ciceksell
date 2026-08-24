@@ -72,8 +72,11 @@ const MODEL_DUZELTME: Record<string, [number, number, number]> = {
   "/models/buket/sakayik.glb": [-Math.PI / 2, 0, 0],
   "/models/buket/sakayik-beyaz.glb": [-Math.PI / 2, 0, 0],
   "/models/buket/ay-cicegi.glb": [Math.PI / 2, 0, 0],
-  "/models/buket/orkide.glb": [-Math.PI / 2, 0, 0],
-  "/models/buket/kazablanka.glb": [-Math.PI / 2, 0, 0],
+  // NOT: orkide.glb icin -90 daha once denendi ama ay-cicegi ile ayni
+  // sekilde (ayni toplu tahminle) eklenmisti ve ay-cicegi'nin isareti
+  // yanlis cikti (duzeltilene kadar yan duruyordu). Ayni riskli tahminle
+  // eklendigi icin orkide de +90 olarak duzeltildi.
+  "/models/buket/orkide.glb": [Math.PI / 2, 0, 0],
 };
 
 /** Konteyner (vazo/kutu) icin: sadece Y yuksekligine gore olceklendirip merkezler */
