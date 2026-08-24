@@ -67,16 +67,42 @@ const CICEK_HACIM_HEDEFI = 0.218;
  * Bazi kaynak modeller kendi ekseninde yatik/donuk geldigi icin (orn.
  * sakayik modeli asil uzun ekseni Z boyunca) buket icinde dik durmalari
  * icin duzeltme rotasyonu uygulanir.
+ *
+ * NOT: ay-cicegi.glb ve orkide.glb icin daha once buraya rotasyon
+ * eklenmisti, ama bu deger dugum (node) donusumlerini (translation/scale)
+ * hesaba katmayan HATALI bir bbox olcumune dayaniyordu. Dogru (node
+ * donusumlerini de iceren) dunya-uzayi PCA analizi, bu iki modelin
+ * ZATEN dik (Y ekseninde) geldigini gosterdi — eklenen rotasyon aslinda
+ * onlari BOZUYORDU (yan yatirıyordu). Bu yuzden ikisi de haritadan
+ * cikarildi; yon-bagimli olduklari icin YON_BAGIMLI listesinde kaldilar.
  */
 const MODEL_DUZELTME: Record<string, [number, number, number]> = {
   "/models/buket/sakayik.glb": [-Math.PI / 2, 0, 0],
   "/models/buket/sakayik-beyaz.glb": [-Math.PI / 2, 0, 0],
-  "/models/buket/ay-cicegi.glb": [Math.PI / 2, 0, 0],
-  // NOT: orkide.glb icin -90 daha once denendi ama ay-cicegi ile ayni
-  // sekilde (ayni toplu tahminle) eklenmisti ve ay-cicegi'nin isareti
-  // yanlis cikti (duzeltilene kadar yan duruyordu). Ayni riskli tahminle
-  // eklendigi icin orkide de +90 olarak duzeltildi.
-  "/models/buket/orkide.glb": [Math.PI / 2, 0, 0],
+};
+
+/**
+ * Yon-bagimli (disk/duz seklinde, "yuzu" olan) cicekler: bunlarin basi
+ * dalin fanlanma acisina/egimine gore rastgele yana donmemeli, her zaman
+ * ayni (dik) yonde durmali. MODEL_DUZELTME'den bagimsizdir — bir model
+ * intrinsik rotasyon duzeltmesi gerektirmeden de yon-bagimli olabilir
+ * (orn. ay-cicegi, orkide: zaten dik geliyor ama yine de sabit durmali).
+ */
+const YON_BAGIMLI = new Set<string>([
+  "/models/buket/sakayik.glb",
+  "/models/buket/sakayik-beyaz.glb",
+  "/models/buket/ay-cicegi.glb",
+  "/models/buket/orkide.glb",
+]);
+
+/**
+ * Bazi modellerin kupkok-hacim normalizasyonundan SONRA bile digerlerine
+ * gore orantisiz gorunmesi durumunda (orn. gul-pembe.glb, sade bir
+ * tomurcuktan daha "dolgun/genis" bir bbox'a sahip) ek bir kucultme
+ * carpani uygulanir.
+ */
+const EK_OLCEK: Record<string, number> = {
+  "/models/buket/gul-pembe.glb": 0.72,
 };
 
 /** Konteyner (vazo/kutu) icin: sadece Y yuksekligine gore olceklendirip merkezler */
@@ -114,7 +140,7 @@ function normalizeCicek(obj: THREE.Object3D, hedefBoyut: number, url: string) {
   const size = new THREE.Vector3();
   box.getSize(size);
   const hacimselBoyut = Math.cbrt(Math.max(size.x, 1e-6) * Math.max(size.y, 1e-6) * Math.max(size.z, 1e-6));
-  const olcek = hacimselBoyut > 0 ? hedefBoyut / hacimselBoyut : 1;
+  const olcek = (hacimselBoyut > 0 ? hedefBoyut / hacimselBoyut : 1) * (EK_OLCEK[url] ?? 1);
   obj.scale.setScalar(olcek);
 
   const box2 = new THREE.Box3().setFromObject(obj);
@@ -163,7 +189,7 @@ function Cicek({
   // Yon-bagimli (disk/duz seklinde) ciceklerin basi HER ZAMAN dik yukari
   // baksin diye dal egimi (tilt) de basa uygulanmaz — yalnizca sap egilir,
   // cicek basinin dunya-uzayindaki rotasyonu sifirlanir.
-  const dikDursun = MODEL_DUZELTME[url] !== undefined;
+  const dikDursun = YON_BAGIMLI.has(url);
 
   // Ic grubun rotasyonunu QUATERNION ile hesapliyoruz: Euler acilarini
   // basitce eksi isaretle "iptal etmeye" calismak yanlis sonuc verir,
@@ -337,23 +363,41 @@ function sayiOlcegi(toplamDal: number) {
   return Math.min(1.1, olcek);
 }
 
+/** Aciyi en kisa yoldan (kisa yay uzerinden) interpole eder */
+function lerpAci(a: number, b: number, t: number) {
+  let fark = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
+  if (fark < -Math.PI) fark += Math.PI * 2;
+  return a + fark * t;
+}
+
 /** Sahne icerigi — dallari buket seklinde yerlestirir */
 function Sahne({
   stems,
   wrapId,
   flowers,
   wrapColor,
+  hazir,
 }: {
   stems: Record<string, number>;
   wrapId: string;
   flowers: FlowerOption[];
   wrapColor?: string;
+  hazir?: boolean;
 }) {
   const grupRef = useRef<THREE.Group>(null);
+  // 0 = acik/dagitik, 1 = "Buketim Hazir" -> sarili ve esit dagilmis durum.
+  // useFrame icinde yumusakca hedefe dogru kaydirilir (ani ziplama olmasin).
+  const [ilerleme, setIlerleme] = useState(0);
 
-  // Yavas donme
+  // Yavas donme + "hazir" ilerlemesini hedefe dogru yumusakca kaydir
   useFrame((_, delta) => {
     if (grupRef.current) grupRef.current.rotation.y += delta * 0.15;
+    const hedef = hazir ? 1 : 0;
+    setIlerleme((v) => {
+      if (v === hedef) return v;
+      const yeni = v + (hedef - v) * Math.min(1, delta * 4);
+      return Math.abs(yeni - hedef) < 0.002 ? hedef : yeni;
+    });
   });
 
   // Dallari tur ic ice (round-robin) siralanmis duz listeye ac.
@@ -392,15 +436,25 @@ function Sahne({
   const vazoda = kap.id === "vazo";
   const { pivotY, tiltBase, jitter, maxRadius } = yerlesimAyarlari(kap.id);
 
-  // Dal sayisina gore yayilma olcegi + konteynerin agzina gore mutlak tavan
+  // Dal sayisina gore yayilma olcegi + konteynerin agzina gore mutlak tavan.
+  // "Buketim Hazir" durumunda dallar biraz daha acilir (hepsi net gorulsun).
   const olcek = sayiOlcegi(toplamDal);
-  const efektifTiltMax = Math.min(tiltBase * olcek, Math.atan2(maxRadius, CICEK_TOPLAM_BOY * 0.9));
+  const tiltCarpani = 1 + 0.22 * ilerleme;
+  const efektifTiltMax = Math.min(
+    tiltBase * olcek * tiltCarpani,
+    Math.atan2(maxRadius, CICEK_TOPLAM_BOY * 0.9)
+  );
+  const minTilt = 0.07 + 0.1 * ilerleme;
 
-  // Kraft/luks sarma boyutu, gercek yayilmaya gore dinamik hesaplanir ki
-  // az dalda gereksiz genis durmasin
+  // Kraft/luks sarma boyutu, gercek yayilmaya gore dinamik hesaplanir ki az
+  // dalda gereksiz genis durmasin. "Hazir" durumunda kagit, dallarin
+  // etrafina daha siki (az bosluklu) ve biraz daha yukari sarilir — gercek
+  // hazirlanmis bir buket gibi gorunmesi icin.
   const yayilmaYaricap = CICEK_TOPLAM_BOY * Math.sin(efektifTiltMax);
-  const sarmaUstYaricap = Math.max(0.13, yayilmaYaricap + 0.055);
-  const sarmaYukseklik = Math.max(0.22, pivotY + CICEK_TOPLAM_BOY * 0.42);
+  const sarmaPadding = 0.055 - 0.033 * ilerleme;
+  const sarmaUstYaricap = Math.max(0.13, yayilmaYaricap + sarmaPadding);
+  const sarmaYukseklikTaban = Math.max(0.22, pivotY + CICEK_TOPLAM_BOY * 0.42);
+  const sarmaYukseklik = sarmaYukseklikTaban * (1 + 0.14 * ilerleme);
 
   return (
     <>
@@ -423,8 +477,13 @@ function Sahne({
             altin acili yonlerde disari dogru farkli egimlerle acilir. */}
         {dallar.map((d, i) => {
           const t = dallar.length <= 1 ? 0 : i / (dallar.length - 1);
-          const aci = i * 2.399963; // altin aci -> dengeli sag/sol dagilim
-          const tilt = 0.07 + Math.sqrt(t) * (efektifTiltMax - 0.07);
+          // Normalde altin aci (dogal/rastgele gorunumlu dagilim); "Buketim
+          // Hazir" durumunda esit araliklarla (360'i dal sayisina bolerek)
+          // her yone esit dagilmis, net gorulebilir bir yerlesime kayar.
+          const acGolden = i * 2.399963;
+          const acEsit = (i / dallar.length) * Math.PI * 2;
+          const aci = lerpAci(acGolden, acEsit, ilerleme);
+          const tilt = minTilt + Math.sqrt(t) * (efektifTiltMax - minTilt);
           // Bagli noktada hafif titresim: tam ust uste binmesin
           const jx = Math.cos(aci) * jitter;
           const jz = Math.sin(aci) * jitter;
@@ -453,6 +512,7 @@ export default function BouquetScene({
   className = "",
   wrapColor,
   showBadge = false,
+  hazir = false,
 }: {
   stems: Record<string, number>;
   wrapId: string;
@@ -460,6 +520,7 @@ export default function BouquetScene({
   className?: string;
   wrapColor?: string;
   showBadge?: boolean;
+  hazir?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [gorunur, setGorunur] = useState(false);
@@ -498,7 +559,7 @@ export default function BouquetScene({
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
-            <Sahne stems={stems} wrapId={wrapId} flowers={flowers} wrapColor={wrapColor} />
+            <Sahne stems={stems} wrapId={wrapId} flowers={flowers} wrapColor={wrapColor} hazir={hazir} />
           </Suspense>
           <OrbitControls
             enablePan={false}

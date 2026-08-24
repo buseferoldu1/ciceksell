@@ -42,6 +42,7 @@ export default function BouquetBuilder({
   const [eklendi, setEklendi] = useState(false);
   const [kategori, setKategori] = useState<FlowerCategory | "tumu">("tumu");
   const [tasarimimEtiketi, setTasarimimEtiketi] = useState(false);
+  const [hazir, setHazir] = useState(false);
 
   const gorunenCicekler = useMemo(
     () =>
@@ -71,6 +72,7 @@ export default function BouquetBuilder({
     setStems({});
     setWrapId(WRAP_OPTIONS[0].id);
     setTasarimimEtiketi(false);
+    setHazir(false);
     setEklendi(false);
   };
 
@@ -100,6 +102,7 @@ export default function BouquetBuilder({
       setStems({});
       setWrapId(WRAP_OPTIONS[0].id);
       setTasarimimEtiketi(false);
+      setHazir(false);
     }, 400);
   };
 
@@ -324,6 +327,7 @@ export default function BouquetBuilder({
                       flowers={FLOWER_OPTIONS}
                       wrapColor={wrapColor}
                       showBadge={tasarimimEtiketi}
+                      hazir={hazir}
                       className="absolute inset-0 h-full w-full"
                     />
                     <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/40 px-2 py-0.5 text-[10px] text-white/60">
@@ -332,6 +336,20 @@ export default function BouquetBuilder({
                   </>
                 )}
               </div>
+
+              {!bosMu && (
+                <button
+                  type="button"
+                  onClick={() => setHazir((v) => !v)}
+                  className={`mb-2 flex w-full items-center justify-center gap-2 rounded-full border py-2.5 text-xs font-semibold transition-colors ${
+                    hazir
+                      ? "border-[#f6b6be] bg-[#f6b6be]/15 text-[#f6b6be]"
+                      : "border-white/15 text-[#e5e2e3]/60 hover:border-white/30"
+                  }`}
+                >
+                  🎀 {hazir ? "Buketim Hazır" : "Buketimi Hazırla"}
+                </button>
+              )}
 
               {!bosMu && (
                 <button
