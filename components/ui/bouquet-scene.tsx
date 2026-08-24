@@ -447,12 +447,12 @@ function Sahne({
   const minTilt = 0.07 + 0.1 * ilerleme;
 
   // Kraft/luks sarma boyutu, gercek yayilmaya gore dinamik hesaplanir ki az
-  // dalda gereksiz genis durmasin. "Hazir" durumunda kagit, dallarin
-  // etrafina daha siki (az bosluklu) ve biraz daha yukari sarilir — gercek
-  // hazirlanmis bir buket gibi gorunmesi icin.
+  // dalda gereksiz genis durmasin. Bosluk kalmadan dallarin etrafini
+  // sarsin diye padding kucultuldu (eskiden 0.055 idi, gorunur bir bosluk
+  // birakiyordu); "Hazir" durumunda daha da sikilasip biraz yukari sarilir.
   const yayilmaYaricap = CICEK_TOPLAM_BOY * Math.sin(efektifTiltMax);
-  const sarmaPadding = 0.055 - 0.033 * ilerleme;
-  const sarmaUstYaricap = Math.max(0.13, yayilmaYaricap + sarmaPadding);
+  const sarmaPadding = 0.022 - 0.014 * ilerleme;
+  const sarmaUstYaricap = Math.max(0.095, yayilmaYaricap + sarmaPadding);
   const sarmaYukseklikTaban = Math.max(0.22, pivotY + CICEK_TOPLAM_BOY * 0.42);
   const sarmaYukseklik = sarmaYukseklikTaban * (1 + 0.14 * ilerleme);
 
