@@ -5,6 +5,7 @@ import { CATALOG, MODELS_3D, type Product } from "./products";
 import { DEFAULT_CONTACT, type ContactSettings } from "./site";
 import { DEFAULT_FLOWER_OPTIONS, type FlowerOption } from "./bouquet";
 import { DEFAULT_FLOWER_STORIES, type FlowerStory } from "./flower-stories";
+import { DEFAULT_TEACHERS_DAY, type TeachersDaySettings } from "./teachers-day";
 
 /**
  * Veri deposu iki modda calisir:
@@ -636,4 +637,15 @@ export async function setFlowerStories(
   stories: FlowerStory[]
 ): Promise<FlowerStory[]> {
   return setSetting("flower-stories", stories);
+}
+
+export async function getTeachersDay(): Promise<TeachersDaySettings> {
+  const saved = await getSetting<Partial<TeachersDaySettings>>("teachers-day");
+  return { ...DEFAULT_TEACHERS_DAY, ...saved };
+}
+
+export async function setTeachersDay(
+  data: TeachersDaySettings
+): Promise<TeachersDaySettings> {
+  return setSetting("teachers-day", data);
 }

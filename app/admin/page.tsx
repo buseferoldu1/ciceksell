@@ -18,6 +18,7 @@ import {
   Settings,
   ShoppingBag,
   Sparkles,
+  GraduationCap,
   Trash2,
   Wallet,
   X,
@@ -28,6 +29,7 @@ import { StatsCard } from "@/components/ui/stats-card-1";
 import { gorseliHazirla } from "@/lib/client-image";
 import AdminSettingsTab from "@/components/ui/admin-settings-tab";
 import AdminWorkshopTab from "@/components/ui/admin-workshop-tab";
+import AdminTeachersDayTab from "@/components/ui/admin-teachers-day-tab";
 import type {
   Order,
   OrderStatus,
@@ -92,7 +94,7 @@ export default function AdminPage() {
   // Durum/silme gibi islemlerde olusan hatalar (onceden sessizce yutuluyordu)
   const [actionError, setActionError] = useState("");
   const [tab, setTab] = useState<
-    "siparisler" | "urunler" | "atolye" | "ayarlar"
+    "siparisler" | "urunler" | "atolye" | "ogretmenler" | "ayarlar"
   >("siparisler");
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -385,6 +387,7 @@ export default function AdminPage() {
               ["siparisler", "Siparişler", ShoppingBag, orders.length],
               ["urunler", "Ürünler", Package, products.length],
               ["atolye", "Atölye", Sparkles, null],
+              ["ogretmenler", "Öğretmenler Günü", GraduationCap, null],
               ["ayarlar", "Site Ayarları", Settings, null],
             ] as const
           ).map(([k, label, Icon, count]) => (
@@ -708,6 +711,18 @@ export default function AdminPage() {
         {/* ---------- Atolye icerigi ---------- */}
         {!loading && tab === "atolye" && (
           <AdminWorkshopTab
+            authedFetch={authedFetch}
+            onUnauthorized={() => {
+              sessionStorage.removeItem("ciceksel-admin-key");
+              setKey(null);
+              setLoginError("Oturum süresi doldu, tekrar giriş yapın");
+            }}
+          />
+        )}
+
+        {/* ---------- Ogretmenler Gunu ---------- */}
+        {!loading && tab === "ogretmenler" && (
+          <AdminTeachersDayTab
             authedFetch={authedFetch}
             onUnauthorized={() => {
               sessionStorage.removeItem("ciceksel-admin-key");
