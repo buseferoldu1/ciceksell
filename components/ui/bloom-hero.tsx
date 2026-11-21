@@ -5,54 +5,32 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Flower2, ShoppingBag, Sparkles } from "lucide-react";
 import { CATALOG, formatPrice, type Product } from "@/lib/products";
+import { DEFAULT_HERO, type HeroSettings } from "@/lib/hero";
 import { useCart } from "@/components/cart/cart-context";
 import FallingPetals from "./falling-petals";
 import Magnetic from "./magnetic";
 
-interface Slide {
-  script: string;
-  headlineTop: string;
-  headlineBottom: string;
-  productId: string;
-  // Vitrin gorseli urun fotografindan farkli olabilir (editoryel/sanatsal)
-  heroImage?: string;
-}
-
-const SLIDE_DEFS: Slide[] = [
-  {
-    script: "Prestij",
-    headlineTop: "Zarafetin",
-    headlineBottom: "Işıltısı",
-    productId: "k30", // 21li Beyaz Lale Lüx
-    heroImage: "/flowers/beyaz-zarafet.jpg",
-  },
-  {
-    script: "Romantizm",
-    headlineTop: "Zamansız",
-    headlineBottom: "Aşk",
-    productId: "k8", // Kutulu 101 Gül
-  },
-  {
-    script: "Başsağlığı",
-    headlineTop: "Sükûnet",
-    headlineBottom: "Bahçesi",
-    productId: "k21", // Kazablanka Mix Lüks
-    heroImage: "/flowers/sukunet.jpg",
-  },
-];
-
-export default function BloomHero({ products }: { products?: Product[] }) {
+export default function BloomHero({
+  products,
+  settings = DEFAULT_HERO,
+}: {
+  products?: Product[];
+  settings?: HeroSettings;
+}) {
   const [index, setIndex] = useState(0);
   const { addItem } = useCart();
 
   // Admin panelinden urunler degisebilir: id ile bul, yoksa siradan sec
   const source = products && products.length > 0 ? products : CATALOG.katalog;
-  const slides = SLIDE_DEFS.map((def, i) => ({
-    ...def,
-    product:
-      source.find((p) => p.id === def.productId) ??
-      source[Math.min(i, source.length - 1)],
-  })).filter((s) => s.product);
+  const slides = (settings.slides.length > 0 ? settings.slides : DEFAULT_HERO.slides)
+    .map((def, i) => ({
+      ...def,
+      heroImage: def.heroImage || undefined,
+      product:
+        source.find((p) => p.id === def.productId) ??
+        source[Math.min(i, source.length - 1)],
+    }))
+    .filter((s) => s.product);
   const slide = slides[index % slides.length];
 
   const go = (i: number) => setIndex((i + slides.length) % slides.length);
@@ -77,6 +55,7 @@ export default function BloomHero({ products }: { products?: Product[] }) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             >
+              {settings.badge && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -84,11 +63,9 @@ export default function BloomHero({ products }: { products?: Product[] }) {
                 className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#d9594c]/30 bg-[#d9594c]/10 px-4 py-1.5 text-xs font-semibold text-[#d9594c]"
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>
-                  <strong className="font-bold">ciceksel200</strong> koduyla
-                  200₺ indirim
-                </span>
+                <span>{settings.badge}</span>
               </motion.div>
+              )}
               <h1 className="font-serif text-6xl font-bold leading-[0.95] tracking-tight text-[#33323a] lg:text-8xl">
                 {slide.headlineTop}
                 <br />

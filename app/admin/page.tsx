@@ -20,6 +20,7 @@ import {
   Sparkles,
   GraduationCap,
   Globe,
+  LayoutTemplate,
   Trash2,
   Wallet,
   X,
@@ -31,6 +32,7 @@ import { gorseliHazirla } from "@/lib/client-image";
 import AdminSettingsTab from "@/components/ui/admin-settings-tab";
 import AdminWorkshopTab from "@/components/ui/admin-workshop-tab";
 import AdminTeachersDayTab from "@/components/ui/admin-teachers-day-tab";
+import AdminHeroTab from "@/components/ui/admin-hero-tab";
 import AdminWorldGalleryTab from "@/components/ui/admin-world-gallery-tab";
 import type {
   Order,
@@ -96,7 +98,7 @@ export default function AdminPage() {
   // Durum/silme gibi islemlerde olusan hatalar (onceden sessizce yutuluyordu)
   const [actionError, setActionError] = useState("");
   const [tab, setTab] = useState<
-    "siparisler" | "urunler" | "atolye" | "dunya" | "ogretmenler" | "ayarlar"
+    "siparisler" | "urunler" | "atolye" | "vitrin" | "dunya" | "ogretmenler" | "ayarlar"
   >("siparisler");
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -389,6 +391,7 @@ export default function AdminPage() {
               ["siparisler", "Siparişler", ShoppingBag, orders.length],
               ["urunler", "Ürünler", Package, products.length],
               ["atolye", "Atölye", Sparkles, null],
+              ["vitrin", "Ana Vitrin", LayoutTemplate, null],
               ["dunya", "Çiçeksel Dünyası", Globe, null],
               ["ogretmenler", "Öğretmenler Günü", GraduationCap, null],
               ["ayarlar", "Site Ayarları", Settings, null],
@@ -714,6 +717,19 @@ export default function AdminPage() {
         {/* ---------- Atolye icerigi ---------- */}
         {!loading && tab === "atolye" && (
           <AdminWorkshopTab
+            authedFetch={authedFetch}
+            onUnauthorized={() => {
+              sessionStorage.removeItem("ciceksel-admin-key");
+              setKey(null);
+              setLoginError("Oturum süresi doldu, tekrar giriş yapın");
+            }}
+          />
+        )}
+
+        {/* ---------- Ana vitrin (hero) ---------- */}
+        {!loading && tab === "vitrin" && (
+          <AdminHeroTab
+            products={products}
             authedFetch={authedFetch}
             onUnauthorized={() => {
               sessionStorage.removeItem("ciceksel-admin-key");

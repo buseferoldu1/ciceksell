@@ -6,6 +6,7 @@ import { DEFAULT_CONTACT, type ContactSettings } from "./site";
 import { DEFAULT_FLOWER_OPTIONS, type FlowerOption } from "./bouquet";
 import { DEFAULT_FLOWER_STORIES, type FlowerStory } from "./flower-stories";
 import { DEFAULT_TEACHERS_DAY, type TeachersDaySettings } from "./teachers-day";
+import { DEFAULT_HERO, type HeroSettings } from "./hero";
 import { DEFAULT_WORLD_GALLERY, type WorldGallerySettings } from "./world-gallery";
 
 /**
@@ -660,4 +661,13 @@ export async function setWorldGallery(
   data: WorldGallerySettings
 ): Promise<WorldGallerySettings> {
   return setSetting("world-gallery", data);
+}
+
+export async function getHeroSettings(): Promise<HeroSettings> {
+  const saved = await getSetting<Partial<HeroSettings>>("hero");
+  return { ...DEFAULT_HERO, ...saved };
+}
+
+export async function setHeroSettings(data: HeroSettings): Promise<HeroSettings> {
+  return setSetting("hero", data);
 }
