@@ -30,6 +30,8 @@ interface CircularGalleryProps {
   radius?: number;
   /** Bosta bekleme donus hizi (derece/kare) */
   autoRotateSpeed?: number;
+  title?: string;
+  subtitle?: string;
 }
 
 function GalleryCard({
@@ -126,6 +128,8 @@ export default function CircularGallery({
   onAdd,
   radius,
   autoRotateSpeed = 0.03,
+  title = "Çiçeksel Dünyası",
+  subtitle = "Kaydırarak çevirin • Üzerine gelip sepete ekleyin",
 }: CircularGalleryProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -196,10 +200,10 @@ export default function CircularGallery({
             transition={{ duration: 0.6 }}
             className="font-serif text-3xl font-bold text-[#33323a] md:text-4xl"
           >
-            Çiçeksel Dünyası
+            {title}
           </motion.h2>
           <p className="mt-2 text-sm text-slate-500">
-            Kaydırarak çevirin • Üzerine gelip sepete ekleyin
+            {subtitle}
           </p>
         </div>
 

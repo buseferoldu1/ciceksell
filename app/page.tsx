@@ -8,7 +8,7 @@ import Faq from "@/components/ui/faq";
 import Contact from "@/components/ui/contact";
 import Footer from "@/components/ui/footer";
 import TeachersDay from "@/components/ui/teachers-day";
-import { getProducts, getTeachersDay } from "@/lib/store";
+import { getProducts, getTeachersDay, getWorldGallery } from "@/lib/store";
 import { teachersDayActive } from "@/lib/teachers-day";
 
 // Urunler admin panelinden yonetildigi icin sayfa her istekte
@@ -16,14 +16,18 @@ import { teachersDayActive } from "@/lib/teachers-day";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [products, teachersDay] = await Promise.all([getProducts(), getTeachersDay()]);
+  const [products, teachersDay, worldGallery] = await Promise.all([
+    getProducts(),
+    getTeachersDay(),
+    getWorldGallery(),
+  ]);
 
   return (
     <main>
       <Navbar />
       <BloomHero products={products} />
       {teachersDayActive(teachersDay) && <TeachersDay settings={teachersDay} />}
-      <CircularGallerySection products={products} />
+      <CircularGallerySection products={products} settings={worldGallery} />
       {/* Yorumlar ile Neden Ciceksel yer degistirdi */}
       <Yorumlar />
       {/* 3D koleksiyon artik Atolye (/vitrin) sayfasinda */}

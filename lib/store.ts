@@ -6,6 +6,7 @@ import { DEFAULT_CONTACT, type ContactSettings } from "./site";
 import { DEFAULT_FLOWER_OPTIONS, type FlowerOption } from "./bouquet";
 import { DEFAULT_FLOWER_STORIES, type FlowerStory } from "./flower-stories";
 import { DEFAULT_TEACHERS_DAY, type TeachersDaySettings } from "./teachers-day";
+import { DEFAULT_WORLD_GALLERY, type WorldGallerySettings } from "./world-gallery";
 
 /**
  * Veri deposu iki modda calisir:
@@ -648,4 +649,15 @@ export async function setTeachersDay(
   data: TeachersDaySettings
 ): Promise<TeachersDaySettings> {
   return setSetting("teachers-day", data);
+}
+
+export async function getWorldGallery(): Promise<WorldGallerySettings> {
+  const saved = await getSetting<Partial<WorldGallerySettings>>("world-gallery");
+  return { ...DEFAULT_WORLD_GALLERY, ...saved };
+}
+
+export async function setWorldGallery(
+  data: WorldGallerySettings
+): Promise<WorldGallerySettings> {
+  return setSetting("world-gallery", data);
 }
