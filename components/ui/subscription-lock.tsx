@@ -22,7 +22,7 @@ export default function SubscriptionLock() {
     <div
       role="alertdialog"
       aria-modal="true"
-      aria-label="Abonelik uyarısı"
+      aria-label="Ödeme uyarısı"
       className="fixed inset-0 z-[300] flex items-center justify-center bg-[#131314] px-6 text-center text-[#e5e2e3]"
     >
       <div className="max-w-lg">
@@ -30,12 +30,12 @@ export default function SubscriptionLock() {
           ⚠️
         </div>
         <h1 className="font-serif text-3xl font-bold md:text-4xl">
-          Aboneliğiniz ödenmedi
+          Ödemenizi almakta zorlanıyoruz
         </h1>
         <p className="mt-5 text-base leading-relaxed text-[#e5e2e3]/70">
-          Site aboneliğiniz ödenmediği için bu sayfa geçici olarak erişime
-          kapatılmıştır. Yeniden abone olarak sitenizi hemen tekrar yayına
-          alabilirsiniz.
+          Site aboneliğinize ait ödeme tarafımıza ulaşmadığı için hizmetiniz
+          geçici olarak askıya alınmıştır. Hizmetin kesintisiz devam edebilmesi
+          için aboneliğinizi yeniden başlatmanızı rica ederiz.
         </p>
         <SubscribeButton />
         {contact && (
