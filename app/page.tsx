@@ -1,3 +1,4 @@
+import SubscriptionLock from "@/components/ui/subscription-lock";
 import Navbar from "@/components/ui/navbar";
 import BloomHero from "@/components/ui/bloom-hero";
 import Features from "@/components/ui/features";
@@ -25,6 +26,7 @@ export default async function Home() {
 
   return (
     <main>
+      <SubscriptionLock />
       <Navbar />
       <BloomHero products={products} settings={hero} />
       {teachersDayActive(teachersDay) && <TeachersDay settings={teachersDay} />}
