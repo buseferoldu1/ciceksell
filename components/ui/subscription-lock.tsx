@@ -1,46 +1,22 @@
 /**
- * Abonelik odenmediginde sitenin girisini kaplayan uyari ekrani.
+ * Abonelik odenmediginde sitenin girisini kaplayan ekran.
+ * Normal bir "404 / sayfa bulunamadi" hatasi gibi gorunur.
  *
  * VARSAYILAN: KAPALI (hicbir sey gostermez). Acmak icin Vercel ortam
  * degiskenlerine SUBSCRIPTION_OVERDUE=1 ekleyip yeniden deploy edin;
  * kapatmak icin degiskeni silin / 0 yapin. Admin panelinden degistirilemez.
- *
- * Istege bagli degiskenler:
- *  - SUBSCRIPTION_CONTACT  (butonun altinda gorunen iletisim/odeme notu)
- *
- * "Yeniden Abone Ol"a tiklaninca "sahip oldugunuz servis saglayiciya
- * basvurun" mesaji gosterilir.
  */
-import SubscribeButton from "./subscribe-button";
-
 export default function SubscriptionLock() {
   if (process.env.SUBSCRIPTION_OVERDUE !== "1") return null;
 
-  const contact = process.env.SUBSCRIPTION_CONTACT;
-
   return (
-    <div
-      role="alertdialog"
-      aria-modal="true"
-      aria-label="Ödeme uyarısı"
-      className="fixed inset-0 z-[300] flex items-center justify-center bg-[#131314] px-6 text-center text-[#e5e2e3]"
-    >
-      <div className="max-w-lg">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-[#d9594c]/40 bg-[#d9594c]/10 text-3xl">
-          ⚠️
-        </div>
-        <h1 className="font-serif text-3xl font-bold md:text-4xl">
-          Ödemenizi almakta zorlanıyoruz
-        </h1>
-        <p className="mt-5 text-base leading-relaxed text-[#e5e2e3]/70">
-          Site aboneliğinize ait ödeme tarafımıza ulaşmadığı için hizmetiniz
-          geçici olarak askıya alınmıştır. Hizmetin kesintisiz devam edebilmesi
-          için aboneliğinizi yeniden başlatmanızı rica ederiz.
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-white px-6 text-center text-[#1a1a1a]">
+      <div className="max-w-md">
+        <h1 className="text-[96px] font-bold leading-none text-[#1a1a1a]">404</h1>
+        <p className="mt-4 text-lg text-[#444]">Bu sayfaya şu anda ulaşılamıyor.</p>
+        <p className="mt-2 text-sm text-[#888]">
+          Aradığınız sayfa bulunamadı ya da geçici olarak kullanım dışı.
         </p>
-        <SubscribeButton />
-        {contact && (
-          <p className="mt-6 text-sm text-[#e5e2e3]/50">{contact}</p>
-        )}
       </div>
     </div>
   );
