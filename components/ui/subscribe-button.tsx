@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /** "Yeniden Abone Ol" butonu: tiklaninca servis saglayiciya basvurma mesaji gosterir. */
-export default function SubscribeButton({ amount }: { amount: string }) {
+export default function SubscribeButton() {
   const [tiklandi, setTiklandi] = useState(false);
   return (
     <div className="mt-8">
@@ -12,7 +12,7 @@ export default function SubscribeButton({ amount }: { amount: string }) {
         onClick={() => setTiklandi(true)}
         className="rounded-full bg-[#d9594c] px-8 py-4 text-sm font-semibold uppercase tracking-widest text-white transition-colors hover:bg-[#c2493d]"
       >
-        Yeniden Abone Ol — {amount} ₺
+        Yeniden Abone Ol
       </button>
       {tiklandi && (
         <p

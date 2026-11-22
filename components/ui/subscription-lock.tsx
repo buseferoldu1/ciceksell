@@ -6,7 +6,6 @@
  * kapatmak icin degiskeni silin / 0 yapin. Admin panelinden degistirilemez.
  *
  * Istege bagli degiskenler:
- *  - SUBSCRIPTION_AMOUNT   (varsayilan "3.000")
  *  - SUBSCRIPTION_CONTACT  (butonun altinda gorunen iletisim/odeme notu)
  *
  * "Yeniden Abone Ol"a tiklaninca "sahip oldugunuz servis saglayiciya
@@ -17,7 +16,6 @@ import SubscribeButton from "./subscribe-button";
 export default function SubscriptionLock() {
   if (process.env.SUBSCRIPTION_OVERDUE !== "1") return null;
 
-  const amount = process.env.SUBSCRIPTION_AMOUNT || "3.000";
   const contact = process.env.SUBSCRIPTION_CONTACT;
 
   return (
@@ -36,11 +34,10 @@ export default function SubscriptionLock() {
         </h1>
         <p className="mt-5 text-base leading-relaxed text-[#e5e2e3]/70">
           Site aboneliğiniz ödenmediği için bu sayfa geçici olarak erişime
-          kapatılmıştır. <strong className="text-[#e5e2e3]">{amount} ₺</strong>{" "}
-          ödeyerek yeniden abone olabilir ve sitenizi hemen tekrar yayına
+          kapatılmıştır. Yeniden abone olarak sitenizi hemen tekrar yayına
           alabilirsiniz.
         </p>
-        <SubscribeButton amount={amount} />
+        <SubscribeButton />
         {contact && (
           <p className="mt-6 text-sm text-[#e5e2e3]/50">{contact}</p>
         )}
